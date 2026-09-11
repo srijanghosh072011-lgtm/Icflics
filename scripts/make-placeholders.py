@@ -35,17 +35,17 @@ PITCH = (14, 95, 71)
 PITCH_DEEP = (10, 71, 53)
 BRASS = (201, 164, 76)
 
-# Duotone recipes: (ground, light, mark). `light` is always markedly brighter
-# than `ground` — a dark glow on a dark ground just reads as mud.
-SCHEMES = [
-    {"ground": INK,        "light": FLARE, "mark": BRASS,      "label": CREAM},
-    {"ground": PITCH_DEEP, "light": BRASS, "mark": CREAM,      "label": CREAM},
-    {"ground": INK,        "light": BRASS, "mark": FLARE,      "label": CREAM},
-    {"ground": FLARE_DEEP, "light": FLARE, "mark": INK,        "label": CREAM},
-    {"ground": PITCH,      "light": FLARE, "mark": CREAM,      "label": CREAM},
-    {"ground": INK_2,      "light": CREAM, "mark": FLARE,      "label": CREAM},
-    {"ground": CREAM_2,    "light": CREAM, "mark": FLARE_DEEP, "label": INK},
-    {"ground": PITCH_DEEP, "light": FLARE, "mark": BRASS,      "label": CREAM},
+# Flat tones. No gradients anywhere: a matte field, a hairline mark and grain.
+# A wash reads as decoration; a flat field reads as a frame waiting for a photo.
+FLATS = [
+    {"bg": INK,          "mark": BRASS, "label": CREAM},
+    {"bg": PITCH_DEEP,   "mark": CREAM, "label": CREAM},
+    {"bg": (36, 33, 29), "mark": FLARE, "label": CREAM},
+    {"bg": FLARE_DEEP,   "mark": CREAM, "label": CREAM},
+    {"bg": PITCH,        "mark": CREAM, "label": CREAM},
+    {"bg": INK_2,        "mark": BRASS, "label": CREAM},
+    {"bg": CREAM_2,      "mark": INK,   "label": INK},
+    {"bg": (58, 53, 46), "mark": CREAM, "label": CREAM},
 ]
 
 _TTF_CACHE = {}
@@ -112,134 +112,52 @@ def tracked_width(draw, text, font, tracking=0):
 
 
 # ---------------------------------------------------------------------------
-# Field construction
+# Hairline marks. Drawn on an RGBA overlay at low opacity so they register as
+# a detail rather than a pattern.
 # ---------------------------------------------------------------------------
 
-def duotone_field(size, scheme, rng):
-    """Broad directional wash from a deepened ground into the light colour.
-
-    Built at 96px and upscaled — the bicubic interpolation is what makes the
-    gradient smooth without banding.
-    """
-    w, h = size
-    ground, light = scheme["ground"], scheme["light"]
-    peak = lerp(ground, light, rng.uniform(0.5, 0.8))
-    deep = lerp(ground, (0, 0, 0), 0.4) if luma(ground) > 40 else ground
-
-    small = Image.new("RGB", (96, 96))
-    px = small.load()
-    rad = math.radians(rng.uniform(0, 360))
-    dx, dy = math.cos(rad), math.sin(rad)
-    bias = rng.uniform(0.9, 1.7)
-    for y in range(96):
-        for x in range(96):
-            t = ((x / 95) * dx + (y / 95) * dy + 1) / 2
-            t = max(0.0, min(1.0, t)) ** bias
-            px[x, y] = lerp(deep, peak, t)
-    return small.resize((w, h), Image.BICUBIC)
+def mark_none(d, w, h, colour, rng):
+    return
 
 
-def add_keylight(img, scheme, rng):
-    """A hot spot in the scheme's light colour. This is what makes it pop."""
-    w, h = img.size
-    cx = w * rng.uniform(0.12, 0.88)
-    cy = h * rng.uniform(0.08, 0.55)
-    radius = max(w, h) * rng.uniform(0.5, 0.9)
-    strength = rng.uniform(0.6, 0.95)
-
-    mask = Image.new("L", (w, h), 0)
-    d = ImageDraw.Draw(mask)
-    steps = 56
-    for i in range(steps):
-        t = (i + 1) / steps
-        r = radius * (1 - t)
-        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=int(255 * (t ** 2.2)))
-    mask = mask.filter(ImageFilter.GaussianBlur(radius * 0.13))
-    mask = mask.point(lambda v: int(v * strength))
-
-    tint = Image.new("RGB", (w, h), scheme["light"])
-    return Image.composite(tint, img, mask)
+def mark_rule(d, w, h, colour, rng):
+    """A single thin rule across the lower third."""
+    y = h * rng.uniform(0.6, 0.74)
+    inset = w * 0.14
+    d.line([(inset, y), (w - inset, y)], fill=colour + (46,), width=2)
 
 
-def add_vignette(img, amount=0.42):
-    """Pull the corners down so the eye lands in the middle, like a real lens."""
-    w, h = img.size
-    mask = Image.new("L", (w, h), 0)
-    d = ImageDraw.Draw(mask)
-    steps = 40
-    for i in range(steps):
-        t = i / steps
-        ix, iy = w * 0.3 * t, h * 0.3 * t
-        d.ellipse([ix - w * 0.2, iy - h * 0.2, w - ix + w * 0.2, h - iy + h * 0.2],
-                  fill=int(255 * (1 - t)))
-    mask = mask.filter(ImageFilter.GaussianBlur(min(w, h) * 0.07))
-    dark = Image.new("RGB", (w, h), (0, 0, 0))
-    return Image.composite(dark, img, mask.point(lambda v: int((255 - v) * amount)))
+def mark_circle(d, w, h, colour, rng):
+    """One thin circle, generously inset."""
+    r = min(w, h) * 0.28
+    cx, cy = w / 2, h * rng.uniform(0.42, 0.54)
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=colour + (40,), width=2)
 
 
-# ---------------------------------------------------------------------------
-# Motifs — drawn onto an RGBA overlay so they can sit at real opacity
-# ---------------------------------------------------------------------------
-
-def motif_pitch_lines(d, w, h, colour, rng):
-    """Receding touchlines in perspective."""
-    n = rng.randint(5, 8)
-    for i in range(n):
-        t = (i + 1) / (n + 1)
-        y = h * (0.24 + 0.78 * (t ** 1.9))
-        spread = w * 0.5 * (0.2 + t * 1.7)
-        d.line([(w / 2 - spread, y), (w / 2 + spread, y)],
-               fill=colour + (int(90 + 110 * t),), width=max(2, int(1 + t * 5)))
+def mark_frame(d, w, h, colour, rng):
+    """A hairline inset frame, like a contact-sheet crop mark."""
+    inset = min(w, h) * 0.09
+    d.rectangle([inset, inset, w - inset, h - inset], outline=colour + (34,), width=2)
 
 
-def motif_centre_circle(d, w, h, colour, rng):
-    cx, cy = w * rng.uniform(0.35, 0.65), h * rng.uniform(0.4, 0.62)
-    for i, factor in enumerate((1.0, 0.62, 0.28)):
-        r = min(w, h) * 0.46 * factor
-        d.ellipse([cx - r, cy - r, cx + r, cy + r],
-                  outline=colour + (150 - i * 30,), width=max(2, int(min(w, h) * 0.006)))
+def mark_corner(d, w, h, colour, rng):
+    """Two corner brackets."""
+    inset = min(w, h) * 0.1
+    arm = min(w, h) * 0.12
+    for (x, y, dx, dy) in ((inset, inset, 1, 1), (w - inset, h - inset, -1, -1)):
+        d.line([(x, y), (x + arm * dx, y)], fill=colour + (52,), width=2)
+        d.line([(x, y), (x, y + arm * dy)], fill=colour + (52,), width=2)
 
 
-def motif_net(d, w, h, colour, rng):
-    """Goal-net lattice."""
-    step = max(26, int(min(w, h) / 11))
-    for i in range(-h, w + h, step):
-        d.line([(i, 0), (i + h, h)], fill=colour + (70,), width=2)
-        d.line([(i, h), (i + h, 0)], fill=colour + (70,), width=2)
+def mark_crosshair(d, w, h, colour, rng):
+    """A centred registration cross."""
+    cx, cy = w / 2, h / 2
+    arm = min(w, h) * 0.06
+    d.line([(cx - arm, cy), (cx + arm, cy)], fill=colour + (44,), width=2)
+    d.line([(cx, cy - arm), (cx, cy + arm)], fill=colour + (44,), width=2)
 
 
-def motif_halftone(d, w, h, colour, rng):
-    """Dot gradient — a print-press nod that photographs well behind type."""
-    step = max(20, int(min(w, h) / 20))
-    for gy in range(0, h + step, step):
-        for gx in range(0, w + step, step):
-            t = gy / max(1, h)
-            r = step * 0.46 * (t ** 1.3)
-            if r < 0.8:
-                continue
-            d.ellipse([gx - r, gy - r, gx + r, gy + r], fill=colour + (120,))
-
-
-def motif_arc_sweep(d, w, h, colour, rng):
-    """Motion arcs — a ball's flight path, abstracted."""
-    for i in range(4):
-        pad = min(w, h) * (0.06 + i * 0.14)
-        box = [-w * 0.35 + pad, h * 0.2 + pad, w * 1.35 - pad, h * 1.95 - pad]
-        d.arc(box, start=198, end=342, fill=colour + (160 - i * 32,),
-              width=max(2, int(min(w, h) * 0.005)))
-
-
-def motif_diagonal_band(d, w, h, colour, rng):
-    """A single wide diagonal sash — the boldest, most graphic option."""
-    t = rng.uniform(0.28, 0.5)
-    bw = min(w, h) * rng.uniform(0.22, 0.36)
-    x0 = w * t
-    d.polygon([(x0, 0), (x0 + bw, 0), (x0 + bw - w * 0.45, h), (x0 - w * 0.45, h)],
-              fill=colour + (48,))
-
-
-MOTIFS = [motif_pitch_lines, motif_centre_circle, motif_net,
-          motif_halftone, motif_arc_sweep, motif_diagonal_band]
+MARKS = [mark_none, mark_rule, mark_circle, mark_frame, mark_corner, mark_crosshair]
 
 
 # ---------------------------------------------------------------------------
@@ -247,50 +165,40 @@ MOTIFS = [motif_pitch_lines, motif_centre_circle, motif_net,
 # ---------------------------------------------------------------------------
 
 def make_image(w, h, seed, label_top="placeholder", label_bottom="", numeral=None,
-               scheme_index=None, vignette=0.42):
-    rng = random.Random(seed)
-    scheme = SCHEMES[scheme_index if scheme_index is not None else seed % len(SCHEMES)]
+               scheme_index=None):
+    """A flat field, one hairline mark, grain, and a corner spec label.
 
-    img = duotone_field((w, h), scheme, rng)
-    img = add_keylight(img, scheme, rng)
+    Deliberately not a gradient. These stand in for photographs, and a wash
+    draws attention to itself in a way a real frame in this position would not.
+    """
+    rng = random.Random(seed)
+    tone = FLATS[scheme_index if scheme_index is not None else seed % len(FLATS)]
+
+    img = Image.new("RGB", (w, h), tone["bg"])
 
     overlay = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     od = ImageDraw.Draw(overlay)
-    MOTIFS[(seed // 5) % len(MOTIFS)](od, w, h, scheme["mark"], rng)
+    MARKS[(seed // 3) % len(MARKS)](od, w, h, tone["mark"], rng)
     img = Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
 
-    # Oversized ghosted numeral — a jersey number, abstracted.
-    if numeral:
-        f = load_font("bodonimoda-latin.woff2", int(h * 0.66), weight=700, opsz=96)
-        if isinstance(f, ImageFont.FreeTypeFont):
-            layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-            ld = ImageDraw.Draw(layer)
-            bb = ld.textbbox((0, 0), numeral, font=f)
-            ld.text(((w - (bb[2] - bb[0])) / 2 - bb[0], (h - (bb[3] - bb[1])) / 2 - bb[1]),
-                    numeral, font=f, fill=scheme["mark"] + (58,))
-            img = Image.alpha_composite(img.convert("RGBA"), layer).convert("RGB")
+    # Grain. Without it a flat fill reads as an empty div rather than a frame.
+    noise = Image.effect_noise((w, h), 20).convert("L")
+    img = Image.blend(img, Image.merge("RGB", (noise, noise, noise)), 0.035)
 
-    img = add_vignette(img, vignette)
-
-    # Film grain. Flat gradients read as CGI; real photography has texture.
-    noise = Image.effect_noise((w, h), 26).convert("L")
-    img = Image.blend(img, Image.merge("RGB", (noise, noise, noise)), 0.05)
-
-    # Corner spec label.
     if label_top or label_bottom:
         d = ImageDraw.Draw(img, "RGBA")
         pad = max(18, int(w * 0.038))
         fs = max(12, int(w * 0.019))
         f_small = load_font("inter-latin.woff2", fs, weight=600)
         f_mid = load_font("inter-latin.woff2", int(fs * 1.1), weight=500)
-        lc = scheme["label"]
+        lc = tone["label"]
         if label_top:
             d.line([(pad, pad + fs * 0.4), (pad + fs * 2.4, pad + fs * 0.4)],
-                   fill=lc + (170,), width=2)
+                   fill=lc + (150,), width=2)
             tracked_text(d, (pad, pad + fs * 1.1), label_top.upper(), f_small,
-                         lc + (190,), tracking=fs * 0.12)
+                         lc + (170,), tracking=fs * 0.12)
         if label_bottom:
-            d.text((pad, h - pad - fs * 1.6), label_bottom, font=f_mid, fill=lc + (140,))
+            d.text((pad, h - pad - fs * 1.6), label_bottom, font=f_mid, fill=lc + (125,))
 
     return img
 
@@ -368,7 +276,6 @@ def main():
         img = make_image(
             w, h, seed=i * 13 + 5,
             label_bottom=note,
-            numeral=NUMERALS[i % len(NUMERALS)] if i % 3 == 0 else None,
         )
         out = IMG_DIR / f"{name}.webp"
         img.save(out, "WEBP", quality=80, method=6)
@@ -377,8 +284,7 @@ def main():
         print(f"  {name}.webp  {w}x{h}  {kb}KB")
 
     # Open Graph card. JPEG — some social scrapers still choke on WebP.
-    og = make_image(1200, 630, seed=4, label_top="", label_bottom="",
-                    scheme_index=0, vignette=0.55)
+    og = make_image(1200, 630, seed=0, label_top="", label_bottom="", scheme_index=0)
     draw_og(og, "ICFLIC", "SPORTS PHOTOGRAPHY FOR ATHLETES")
     og_path = IMG_DIR / "og-default.jpg"
     og.save(og_path, "JPEG", quality=86, optimize=True, progressive=True)

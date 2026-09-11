@@ -651,18 +651,6 @@ h4, h5, h6 {
   position: relative;
   overflow: hidden;
 }
-.hero::before {
-  /* warm light spill from top-left; keeps the black from going flat */
-  content: '';
-  position: absolute;
-  inset-block-start: -30%;
-  inset-inline-start: -10%;
-  inline-size: 60%;
-  block-size: 80%;
-  background: radial-gradient(circle at 30% 30%,
-    rgba(255, 90, 31, 0.16), transparent 62%);
-  pointer-events: none;
-}
 .hero > * { position: relative; }
 
 .hero-copy {
@@ -939,8 +927,8 @@ h4, h5, h6 {
   position: absolute;
   inset-block-end: 0;
   inset-inline: 0;
-  padding: var(--sp-6) var(--sp-4) var(--sp-4);
-  background: linear-gradient(to top, rgba(19, 18, 16, 0.9), transparent);
+  padding: var(--sp-4);
+  background: rgba(19, 18, 16, 0.82);
   color: var(--cream);
   display: grid;
   gap: 0.15rem;
@@ -1557,16 +1545,6 @@ h4, h5, h6 {
   text-align: center;
   justify-items: center;
 }
-.cta-band::before {
-  content: '';
-  position: absolute;
-  inset-block-start: -40%;
-  inset-inline-end: -15%;
-  inline-size: 55%;
-  block-size: 160%;
-  background: radial-gradient(circle at 50% 50%, rgba(201, 164, 76, 0.2), transparent 65%);
-  pointer-events: none;
-}
 .cta-band > * { position: relative; }
 .cta-band .lede { color: rgba(246, 241, 231, 0.82); text-align: center; }
 
@@ -1648,16 +1626,6 @@ h4, h5, h6 {
   padding-block: clamp(3rem, 2rem + 4vw, 5.5rem);
   position: relative;
   overflow: hidden;
-}
-.page-head::before {
-  content: '';
-  position: absolute;
-  inset-block-start: -50%;
-  inset-inline-end: -5%;
-  inline-size: 45%;
-  block-size: 150%;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 90, 31, 0.14), transparent 62%);
-  pointer-events: none;
 }
 .page-head > * { position: relative; }
 .page-head .lede { color: var(--text-on-dark-muted); }

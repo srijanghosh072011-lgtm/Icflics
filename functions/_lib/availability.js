@@ -52,6 +52,9 @@ export async function computeSlots(db, fromIso, toIso) {
 
   const nowSec = Math.floor(Date.now() / 1000);
   const earliest = nowSec + CONFIG.minLeadHours * 3600;
+  // Without an upper bound the calendar happily offers — and the booking
+  // endpoint accepts — any future date that matches a weekly rule, years out.
+  const latest = nowSec + CONFIG.maxDaysAhead * 86400;
 
   // Bound the query by the actual window, padded a day either side so a
   // booking that starts late on the previous day still blocks an early slot.
@@ -84,12 +87,18 @@ export async function computeSlots(db, fromIso, toIso) {
     for (const rule of rules) {
       if (rule.weekday !== weekday) continue;
 
+      // Step by slot + buffer, not slot alone. Back-to-back slots mean every
+      // booking's buffer overlaps its neighbours, so a single 90-minute
+      // booking with a 30-minute buffer removed three slots from the day.
+      // Spacing the grid by the buffer makes a booking cost exactly one slot.
+      const step = CONFIG.slotMinutes + CONFIG.bufferMinutes;
+
       for (let min = rule.start_min; min + CONFIG.slotMinutes <= rule.end_min;
-           min += CONFIG.slotMinutes) {
+           min += step) {
         const start = zonedToUtc(year, month, day, min, tz);
         const end = start + slotSec;
 
-        if (start < earliest) continue;
+        if (start < earliest || start > latest) continue;
         if (blackouts.some((b) => overlaps(start, end, b.starts_at, b.ends_at))) continue;
         if (booked.some((b) => overlaps(
           start - bufferSec, end + bufferSec, b.starts_at, b.ends_at))) continue;

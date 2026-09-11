@@ -29,12 +29,13 @@ export async function onRequestGet({ request, env }) {
           || 'Bookings are closed at the moment.',
         timezone: CONFIG.timezone,
         slotMinutes: CONFIG.slotMinutes,
+        maxDaysAhead: CONFIG.maxDaysAhead,
         days: {},
       });
     }
 
     const result = await computeSlots(env.DB, from, to);
-    return ok({ enabled: true, ...result });
+    return ok({ enabled: true, maxDaysAhead: CONFIG.maxDaysAhead, ...result });
   } catch (error) {
     // Never leak a database error to the client.
     console.error('availability failed', error);

@@ -175,8 +175,11 @@
       <div class="container">
         <div class="panel-card">
           <h2 class="display-caps display-sm mb-5">Weekly hours</h2>
-          <p class="text-muted mb-5">The recurring window each day when sessions can be booked. Uncheck a day to take it off the calendar entirely.</p>
+          <p class="text-muted mb-5">The recurring windows when sessions can be booked. A day can have more than one &mdash; a morning block and an evening block, say. Remove every window for a day to take it off the calendar.</p>
           <div id="hours-list" class="stack"></div>
+          <div class="cluster mt-5">
+            <button class="btn btn-sm btn-ghost" type="button" id="add-hours">+ Add window</button>
+          </div>
           <div class="cluster mt-6">
             <button class="btn" type="button" id="save-hours">Save weekly hours</button>
             <span id="hours-feedback" role="status" aria-live="polite"></span>

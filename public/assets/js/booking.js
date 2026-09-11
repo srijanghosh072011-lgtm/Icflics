@@ -27,6 +27,7 @@
     selectedDate: null,
     selectedTime: null,
     slotMinutes: 90,
+    maxDaysAhead: 120,
     timezone: '',
     loading: false,
     renderedAt: Date.now(),
@@ -138,6 +139,7 @@
 
         state.timezone = data.timezone || '';
         state.slotMinutes = data.slotMinutes || 90;
+        state.maxDaysAhead = data.maxDaysAhead || state.maxDaysAhead;
         setText('s-tz', state.timezone.replace(/_/g, ' '));
 
         if (data.enabled === false) {
@@ -219,12 +221,22 @@
       return sameMonth(new Date(iso + 'T12:00:00'), month);
     }).length;
 
+    // The server will not offer anything past the booking horizon, so stop
+    // the visitor paging into empty months forever.
+    var horizon = new Date();
+    horizon.setDate(horizon.getDate() + state.maxDaysAhead);
+    var pastHorizon = startOfMonth(month) > startOfMonth(horizon);
+
     status.textContent = open
       ? open + ' date' + (open > 1 ? 's' : '') + ' open this month. Times shown in '
         + state.timezone.replace(/_/g, ' ') + '.'
-      : 'Nothing open this month — try the next one.';
+      : (pastHorizon
+        ? 'The calendar opens about ' + Math.round(state.maxDaysAhead / 30)
+          + ' months ahead. To plan further out, get in touch.'
+        : 'Nothing open this month — try the next one.');
 
     prev.disabled = sameMonth(month, startOfMonth(new Date()));
+    next.disabled = pastHorizon;
   }
 
   function renderSlots() {

@@ -229,17 +229,10 @@
   grid-template-columns: 1fr;
 }
 @media (min-width: 40rem) {
-  .hours-row { grid-template-columns: 9rem 1fr 1fr; gap: var(--sp-4); }
+  /* day, from, to, remove */
+  .hours-row { grid-template-columns: 10rem 1fr 1fr auto; gap: var(--sp-4); }
 }
 .hours-row:last-child { border-block-end: 0; }
-.hours-day {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-weight: 600;
-  font-size: var(--step--1);
-}
-.hours-row[data-active='false'] .input { opacity: 0.45; }
 
 .empty-state {
   padding: var(--sp-7) var(--sp-5);

@@ -70,6 +70,21 @@ export async function onRequestPost({ request, env }) {
     return fail('Please choose a date and time.', 400, { field: 'date' });
   }
 
+  // Check the window before asking the database, so an out-of-range date gets
+  // an accurate answer rather than "that slot has just been taken".
+  const startsAt = zonedToUtc(date[0], date[1], date[2], minutes, CONFIG.timezone);
+  const now = nowSeconds();
+
+  if (startsAt < now + CONFIG.minLeadHours * 3600) {
+    return fail(`Sessions need at least ${CONFIG.minLeadHours} hours' notice.`,
+      400, { field: 'date' });
+  }
+  if (startsAt > now + CONFIG.maxDaysAhead * 86400) {
+    return fail(`The calendar only opens ${CONFIG.maxDaysAhead} days ahead. `
+      + 'Pick a nearer date, or get in touch to plan further out.',
+      400, { field: 'date' });
+  }
+
   // ---- Availability -------------------------------------------------------
   try {
     const settings = await loadSettings(env.DB);
@@ -85,9 +100,7 @@ export async function onRequestPost({ request, env }) {
         { field: 'date' });
     }
 
-    const startsAt = zonedToUtc(date[0], date[1], date[2], minutes, CONFIG.timezone);
     const endsAt = startsAt + CONFIG.slotMinutes * 60;
-    const now = nowSeconds();
     const id = crypto.randomUUID();
 
     // A reference collision is vanishingly unlikely, but the column is UNIQUE,

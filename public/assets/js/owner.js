@@ -366,62 +366,96 @@
 
   /* ---- weekly hours ------------------------------------------------------ */
 
+  function hoursRow(rule) {
+    var row = el('div', 'hours-row');
+
+    var day = el('select', 'select');
+    DAY_NAMES.forEach(function (label, index) {
+      var option = el('option', null, label);
+      option.value = String(index);
+      day.appendChild(option);
+    });
+    day.value = String(rule ? rule.weekday : 6);
+    day.setAttribute('data-role', 'weekday');
+    day.setAttribute('aria-label', 'Day of the week');
+    row.appendChild(day);
+
+    var from = el('input', 'input');
+    from.type = 'time';
+    from.step = '900';
+    from.value = minutesToTime(rule ? rule.start_min : 540);
+    from.setAttribute('data-role', 'start');
+    from.setAttribute('aria-label', 'Start time');
+    row.appendChild(from);
+
+    var to = el('input', 'input');
+    to.type = 'time';
+    to.step = '900';
+    to.value = minutesToTime(rule ? rule.end_min : 1140);
+    to.setAttribute('data-role', 'end');
+    to.setAttribute('aria-label', 'End time');
+    row.appendChild(to);
+
+    var remove = el('button', 'btn btn-sm btn-ghost', 'Remove');
+    remove.type = 'button';
+    remove.addEventListener('click', function () {
+      row.remove();
+      if (!document.querySelectorAll('#hours-list .hours-row').length) showHoursEmpty();
+    });
+    row.appendChild(remove);
+
+    return row;
+  }
+
+  function showHoursEmpty() {
+    var list = document.getElementById('hours-list');
+    if (list.querySelector('.empty-state')) return;
+    list.appendChild(el('p', 'empty-state',
+      'No hours set. With nothing here the calendar has no slots to offer.'));
+  }
+
+  /**
+   * A flat list of windows rather than one row per weekday.
+   * Days can carry more than one window — a morning and an evening block, say —
+   * and the engine already honours that. Rendering one row per day meant the
+   * extra windows were invisible here and were deleted on the next save.
+   */
   function renderHours() {
     var list = document.getElementById('hours-list');
     list.textContent = '';
 
-    for (var day = 0; day < 7; day++) {
-      var rule = data.rules.find(function (r) { return r.weekday === day; });
-      var row = el('div', 'hours-row');
-      row.setAttribute('data-weekday', String(day));
-      row.setAttribute('data-active', String(!!(rule && rule.active)));
+    var rules = (data.rules || [])
+      .filter(function (r) { return r.active; })
+      .slice()
+      .sort(function (a, b) { return a.weekday - b.weekday || a.start_min - b.start_min; });
 
-      var dayLabel = el('label', 'hours-day');
-      var checkbox = el('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = !!(rule && rule.active);
-      checkbox.setAttribute('data-role', 'active');
-      dayLabel.appendChild(checkbox);
-      dayLabel.appendChild(document.createTextNode(DAY_NAMES[day]));
-      row.appendChild(dayLabel);
-
-      var from = el('input', 'input');
-      from.type = 'time';
-      from.step = '900';
-      from.value = minutesToTime(rule ? rule.start_min : 540);
-      from.setAttribute('data-role', 'start');
-      from.setAttribute('aria-label', DAY_NAMES[day] + ' start time');
-      row.appendChild(from);
-
-      var to = el('input', 'input');
-      to.type = 'time';
-      to.step = '900';
-      to.value = minutesToTime(rule ? rule.end_min : 1140);
-      to.setAttribute('data-role', 'end');
-      to.setAttribute('aria-label', DAY_NAMES[day] + ' end time');
-      row.appendChild(to);
-
-      checkbox.addEventListener('change', function (event) {
-        event.target.closest('.hours-row')
-          .setAttribute('data-active', String(event.target.checked));
-      });
-
-      list.appendChild(row);
+    if (!rules.length) {
+      showHoursEmpty();
+      return;
     }
+    rules.forEach(function (rule) { list.appendChild(hoursRow(rule)); });
   }
+
+  document.getElementById('add-hours').addEventListener('click', function () {
+    var list = document.getElementById('hours-list');
+    var empty = list.querySelector('.empty-state');
+    if (empty) empty.remove();
+    var row = hoursRow(null);
+    list.appendChild(row);
+    row.querySelector('[data-role="weekday"]').focus();
+  });
 
   document.getElementById('save-hours').addEventListener('click', function () {
     var node = document.getElementById('hours-feedback');
     var rules = [];
-
     var rows = document.querySelectorAll('#hours-list .hours-row');
+
     for (var i = 0; i < rows.length; i++) {
       var row = rows[i];
-      if (!row.querySelector('[data-role="active"]').checked) continue;
-
+      var weekday = Number(row.querySelector('[data-role="weekday"]').value);
       var startMin = timeToMinutes(row.querySelector('[data-role="start"]').value);
       var endMin = timeToMinutes(row.querySelector('[data-role="end"]').value);
-      var dayName = DAY_NAMES[Number(row.getAttribute('data-weekday'))];
+      var dayName = DAY_NAMES[weekday];
 
       if (startMin === null || endMin === null) {
         status(node, 'error', dayName + ' needs both a start and an end time.');
@@ -431,13 +465,18 @@
         status(node, 'error', dayName + ' must end after it starts.');
         return;
       }
+      rules.push({ weekday: weekday, start_min: startMin, end_min: endMin, active: true });
+    }
 
-      rules.push({
-        weekday: Number(row.getAttribute('data-weekday')),
-        start_min: startMin,
-        end_min: endMin,
-        active: true,
-      });
+    // Overlapping windows on the same day would produce duplicate slots.
+    for (var a = 0; a < rules.length; a++) {
+      for (var b = a + 1; b < rules.length; b++) {
+        if (rules[a].weekday !== rules[b].weekday) continue;
+        if (rules[a].start_min < rules[b].end_min && rules[b].start_min < rules[a].end_min) {
+          status(node, 'error', 'Two ' + DAY_NAMES[rules[a].weekday] + ' windows overlap.');
+          return;
+        }
+      }
     }
 
     api('/api/owner/availability', {
@@ -445,7 +484,9 @@
       body: JSON.stringify({ rules: rules }),
     }).then(function (result) {
       if (!result.body.ok) { status(node, 'error', result.body.error || 'Could not save.'); return; }
-      status(node, 'ok', 'Weekly hours saved.');
+      status(node, 'ok', rules.length
+        ? 'Saved ' + rules.length + ' window' + (rules.length === 1 ? '' : 's') + '.'
+        : 'Saved. The calendar now has no open hours.');
       loadState();
     }).catch(function () { status(node, 'error', 'Could not reach the server.'); });
   });

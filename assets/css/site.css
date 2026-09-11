@@ -672,12 +672,20 @@ h4, h5, h6 {
 .hero-collage {
   margin-block-start: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(0.5rem, 0.3rem + 0.8vw, 1rem);
   align-items: end;
 }
+
+/* The photographer leads. On narrow screens he takes the full width and the
+   work sits in a row beneath him. */
+.hero-frame-lead {
+  grid-column: 1 / -1;
+  aspect-ratio: 4 / 5;
+}
+.hero-frame:not(.hero-frame-lead) { aspect-ratio: 3 / 4; }
 @media (min-width: 52rem) {
-  .hero-collage { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .hero-collage { grid-template-columns: 1.75fr 1fr 1fr 1fr; }
 }
 .hero-frame {
   position: relative;
@@ -693,12 +701,19 @@ h4, h5, h6 {
   transition: transform 900ms var(--ease-out-expo);
 }
 .hero-frame:hover img { transform: scale(1.045); }
-/* staggered heights read as a skyline rather than a plain row */
+/* Staggered heights read as a skyline rather than a plain row. The lead frame
+   is both wider and taller so the eye lands on him first. */
 @media (min-width: 52rem) {
-  .hero-frame:nth-child(1) { aspect-ratio: 3 / 4;   margin-block-end: 2rem; }
-  .hero-frame:nth-child(2) { aspect-ratio: 3 / 4.8; }
-  .hero-frame:nth-child(3) { aspect-ratio: 3 / 4.8; }
-  .hero-frame:nth-child(4) { aspect-ratio: 3 / 4;   margin-block-end: 2rem; }
+  .hero-frame-lead {
+    /* Reset the full-width span the small-screen base sets, or he swallows
+       the whole row and the work frames wrap beneath him. */
+    grid-column: auto;
+    aspect-ratio: 4 / 5;
+    margin-block-end: 0;
+  }
+  .hero-frame:nth-child(2) { aspect-ratio: 3 / 4.3; margin-block-end: 1.25rem; }
+  .hero-frame:nth-child(3) { aspect-ratio: 3 / 4.3; margin-block-end: 0.5rem; }
+  .hero-frame:nth-child(4) { aspect-ratio: 3 / 4.3; margin-block-end: 1.75rem; }
 }
 
 /* --------------------------------------------------------------------------
@@ -1764,11 +1779,17 @@ h4, h5, h6 {
 
   /* ---- Hero ------------------------------------------------------------- */
   .hero { padding-block-start: var(--sp-6); }
-  .hero-copy { gap: var(--sp-4); }
-  .hero-copy h1 { max-inline-size: 16ch; }
-  /* Two frames are enough of a taste on a phone; the rest is scroll cost. */
-  .hero-collage { margin-block-start: var(--sp-6); }
-  .hero-frame:nth-child(n + 3) { display: none; }
+  .hero-copy { gap: var(--sp-3); }
+  .hero-copy h1 {
+    max-inline-size: 15ch;
+    /* 43px over four lines was most of the screen on its own. */
+    font-size: clamp(1.85rem, 1.15rem + 3.4vw, 2.35rem);
+  }
+  .hero-copy .lede { font-size: var(--step-0); }
+  .hero-collage { margin-block-start: var(--sp-5); gap: 0.4rem; }
+  /* The lead is the point of the hero on a phone; the work reads as a strip. */
+  .hero-frame-lead { aspect-ratio: 1 / 1; }
+  .hero-frame:not(.hero-frame-lead) { aspect-ratio: 3 / 3.6; }
 
   /* Full-width buttons are easier to hit than centred pills. */
   .hero-actions { inline-size: 100%; flex-direction: column; align-items: stretch; }

@@ -15,7 +15,10 @@ Metadata is stripped on the way out — phone exports can carry GPS, and these
 are photographs of identifiable young athletes at named locations.
 """
 
+import hashlib
+import re
 from pathlib import Path
+
 from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -25,13 +28,16 @@ OUT = ROOT / "public" / "assets" / "img"
 # Focal point as a fraction of the frame: where the subject actually is, so
 # cropping to a different aspect keeps them rather than the background.
 SOURCES = {
+    # The photographer himself. Confirmed by the client — do not reassign this
+    # to an athlete slot, and do not caption it as a subject.
+    "owner":    {"file": "IMG_8937.jpeg", "focus": (0.33, 0.48), "look": "natural"},
+
     # Selective-colour set: green kit isolated, everything else drained.
     "sideline": {"file": "IMG_8934.jpeg", "focus": (0.30, 0.42), "look": "selective"},
     "dribble":  {"file": "IMG_8935.jpeg", "focus": (0.48, 0.50), "look": "selective"},
     "strike":   {"file": "IMG_8936.jpeg", "focus": (0.45, 0.48), "look": "selective"},
 
     # Natural-colour set.
-    "night":    {"file": "IMG_8937.jpeg", "focus": (0.32, 0.55), "look": "natural"},
     "run":      {"file": "IMG_8938.jpeg", "focus": (0.38, 0.45), "look": "natural"},
     "bench":    {"file": "IMG_8939.jpeg", "focus": (0.50, 0.52), "look": "natural"},
 
@@ -39,44 +45,47 @@ SOURCES = {
     # photography, so it is deliberately unused.
 }
 
-# slot -> (source, width, height). Portrait everywhere except work-06, which is
-# the one landscape frame in the set.
+# slot -> (source, width, height)
 SLOTS = {
-    # Hero: four frames. The three selective-colour shots plus the golden-light
-    # run, tied together by the green kit running through all four.
-    "hero-01": ("sideline", 870, 1160),
+    # Hero. The owner leads at a larger size; the work sits beside him.
+    "hero-01": ("owner",    980, 1225),   # lead frame, rendered largest
     "hero-02": ("dribble",  870, 1160),
     "hero-03": ("run",      870, 1160),
     "hero-04": ("strike",   870, 1160),
 
-    # Service cards, cropped tighter so they do not read as the hero repeated.
+    # Service cards, cropped tighter so they do not repeat the hero.
     "service-recruiting": ("sideline", 860, 1075),
     "service-matchday":   ("strike",   860, 1075),
-    "service-portrait":   ("night",    860, 1075),
+    "service-portrait":   ("bench",    860, 1075),   # the seated player, not the owner
     "service-brand":      ("dribble",  860, 1075),
 
-    # Portfolio.
+    # Portfolio. Four athlete frames plus the landscape band. The owner's own
+    # portrait is not in here: a portfolio shows the work, not the photographer.
     "work-01": ("dribble",  860, 1075),
     "work-02": ("strike",   860, 1075),
     "work-03": ("run",      860, 1075),
     "work-04": ("sideline", 860, 1075),
-    "work-05": ("night",    860, 1075),
-    "work-06": ("bench",   1400,  875),   # the landscape frame
+    "work-06": ("bench",   1400,  875),
 }
 
 ZOOM = {
+    # He stands in the left third of a wide street scene. At 1.0 he is a small
+    # figure in a car park; the hero needs him to read as the subject.
+    "hero-01": 1.75,
     "service-recruiting": 1.35,
     "service-matchday": 1.30,
-    "service-portrait": 1.25,
+    "service-portrait": 1.75,   # tight on the seated player
     "service-brand": 1.15,
 }
 
 # Per-slot focal overrides. A tight crop needs to sit higher than the frame's
 # natural centre or it takes the head off.
 FOCUS = {
+    "hero-01": (0.19, 0.55),
     "service-brand": (0.48, 0.38),
     "service-recruiting": (0.30, 0.38),
     "service-matchday": (0.45, 0.44),
+    "service-portrait": (0.47, 0.60),   # the seated figure sits low in the frame
 }
 
 
@@ -129,8 +138,38 @@ def main():
         total += kb
         print(f"  {slot:20} {w}x{h}  {kb}KB  ({key})")
 
+    stamp_html()
     print(f"\n{len(SLOTS)} frames, {total}KB total.")
     return 0
+
+
+def stamp_html():
+    """Append a content hash to every image URL in the pages.
+
+    Filenames are deliberately stable so a photo can be swapped without
+    touching markup. The cost is that browsers keep serving the old picture —
+    up to a day, per the cache headers. Stamping the URL with a hash of the
+    file means a changed photo is a changed URL, and the new one appears at
+    once.
+    """
+    digests = {}
+    for path in sorted(OUT.glob("*.webp")) + sorted(OUT.glob("*.jpg")):
+        digests[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()[:8]
+
+    pattern = re.compile(r'(/assets/img/([A-Za-z0-9_-]+\.(?:webp|jpg)))(\?v=[a-f0-9]+)?')
+    changed = 0
+
+    for page in sorted((ROOT / "public").rglob("*.html")):
+        source = page.read_text(encoding="utf-8")
+        updated = pattern.sub(
+            lambda m: m.group(1) + (f"?v={digests[m.group(2)]}" if m.group(2) in digests else ""),
+            source,
+        )
+        if updated != source:
+            page.write_text(updated, encoding="utf-8")
+            changed += 1
+
+    print(f"  version-stamped image URLs in {changed} page(s)")
 
 
 if __name__ == "__main__":

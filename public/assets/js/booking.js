@@ -30,6 +30,7 @@
     maxDaysAhead: 120,
     timezone: '',
     loading: false,
+    demo: false,
     renderedAt: Date.now(),
   };
 
@@ -102,6 +103,59 @@
     }
   }
 
+  /* ---- demo availability -------------------------------------------------
+     A static host has no Functions runtime, so there is nothing to compute
+     real availability. Rather than hide the calendar entirely, generate a
+     plausible month in the browser so the interface can still be seen and
+     clicked through. Mirrors the server defaults in functions/_lib/config.js:
+     90-minute sessions on a 120-minute grid, 24 hours' notice, 120-day
+     horizon, Thursday to Sunday. Nothing here is sent anywhere. */
+
+  var DEMO_RULES = {
+    4: [540, 1140],   // Thursday 09:00-19:00
+    5: [540, 1140],   // Friday
+    6: [480, 1200],   // Saturday 08:00-20:00
+    0: [480, 1200],   // Sunday
+  };
+
+  function demoDays(fromIso, toIso) {
+    var days = {};
+    var cursor = new Date(fromIso + 'T12:00:00');
+    var last = new Date(toIso + 'T12:00:00');
+    var earliest = Date.now() + 24 * 3600 * 1000;
+    var horizon = Date.now() + 120 * 86400 * 1000;
+    var step = state.slotMinutes + 30;
+
+    while (cursor <= last) {
+      var rule = DEMO_RULES[cursor.getDay()];
+      if (rule) {
+        var open = [];
+        for (var min = rule[0]; min + state.slotMinutes <= rule[1]; min += step) {
+          var at = new Date(cursor);
+          at.setHours(Math.floor(min / 60), min % 60, 0, 0);
+          if (at.getTime() < earliest || at.getTime() > horizon) continue;
+          open.push(pad(Math.floor(min / 60)) + ':' + pad(min % 60));
+        }
+        if (open.length) days[isoOf(cursor)] = open;
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return days;
+  }
+
+  function enterDemoMode() {
+    state.demo = true;
+    var intro = document.getElementById('book-intro');
+    if (intro) {
+      intro.textContent = 'A preview of the booking page. The calendar below is '
+        + 'generated in your browser so you can see how it works.';
+    }
+    var banner = document.getElementById('demo-banner');
+    if (banner) banner.classList.remove('is-hidden');
+    submit.textContent = 'Demo only \u2014 not connected';
+    submit.setAttribute('aria-disabled', 'true');
+  }
+
   /* ---- data ------------------------------------------------------------- */
 
   function rangeFor(month) {
@@ -161,13 +215,10 @@
       .catch(function (error) {
         state.loading = false;
         if (error && error.noBackend) {
-          closedMsg.textContent = 'This is a static preview of the site, so the live '
-            + 'calendar is not connected. On the real deployment this shows genuine '
-            + 'availability and takes bookings.';
-          closedBox.classList.remove('is-hidden');
-          form.classList.add('is-hidden');
-          var intro = document.getElementById('book-intro');
-          if (intro) intro.textContent = 'A preview of the booking page.';
+          enterDemoMode();
+          var range = rangeFor(month);
+          state.days = demoDays(range.from, range.to);
+          render();
           return;
         }
         status.textContent =
@@ -321,6 +372,12 @@
 
     if (!state.selectedDate || !state.selectedTime) {
       showFeedback('warn', 'Pick a date and time first.');
+      return;
+    }
+
+    if (state.demo) {
+      showFeedback('warn', 'This is a preview, so nothing was sent. On the live site '
+        + 'this request would reach the studio and you would get a confirmation by email.');
       return;
     }
 

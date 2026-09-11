@@ -25,47 +25,58 @@ OUT = ROOT / "public" / "assets" / "img"
 # Focal point as a fraction of the frame: where the subject actually is, so
 # cropping to a different aspect keeps them rather than the background.
 SOURCES = {
-    "sideline":  {"file": "IMG_8934.jpeg", "focus": (0.30, 0.45)},  # #23 watching from the line
-    "dribble":   {"file": "IMG_8935.jpeg", "focus": (0.48, 0.52)},  # #27 running at the defence
-    "strike":    {"file": "IMG_8936.jpeg", "focus": (0.45, 0.50)},  # #20 striking, ball in frame
-    "cityscape": {"file": "IMG_8937.jpeg", "focus": (0.32, 0.55)},  # night portrait, off the field
+    # Selective-colour set: green kit isolated, everything else drained.
+    "sideline": {"file": "IMG_8934.jpeg", "focus": (0.30, 0.42), "look": "selective"},
+    "dribble":  {"file": "IMG_8935.jpeg", "focus": (0.48, 0.50), "look": "selective"},
+    "strike":   {"file": "IMG_8936.jpeg", "focus": (0.45, 0.48), "look": "selective"},
+
+    # Natural-colour set.
+    "night":    {"file": "IMG_8937.jpeg", "focus": (0.32, 0.55), "look": "natural"},
+    "run":      {"file": "IMG_8938.jpeg", "focus": (0.38, 0.45), "look": "natural"},
+    "bench":    {"file": "IMG_8939.jpeg", "focus": (0.50, 0.52), "look": "natural"},
+
+    # IMG_8940 is an amusement park. No athlete, nothing that reads as sports
+    # photography, so it is deliberately unused.
 }
 
-# slot name -> (source key, width, height)
-# Everything is portrait because every source is portrait. Forcing these into
-# landscape frames would cut the subjects in half.
+# slot -> (source, width, height). Portrait everywhere except work-06, which is
+# the one landscape frame in the set.
 SLOTS = {
-    # Hero collage — three frames, not five. Three real photographs beat five
-    # frames where two are stand-ins.
-    "hero-01": ("sideline",  870, 1160),
-    "hero-02": ("dribble",   870, 1160),
-    "hero-03": ("strike",    870, 1160),
+    # Hero: four frames. The three selective-colour shots plus the golden-light
+    # run, tied together by the green kit running through all four.
+    "hero-01": ("sideline", 870, 1160),
+    "hero-02": ("dribble",  870, 1160),
+    "hero-03": ("run",      870, 1160),
+    "hero-04": ("strike",   870, 1160),
 
-    # Service cards. Tighter crops so they read as different frames from the
-    # hero rather than the same photo twice.
-    "service-recruiting": ("sideline",  860, 1075),
-    "service-matchday":   ("strike",    860, 1075),
-    "service-portrait":   ("cityscape", 860, 1075),
-    "service-brand":      ("dribble",   860, 1075),
+    # Service cards, cropped tighter so they do not read as the hero repeated.
+    "service-recruiting": ("sideline", 860, 1075),
+    "service-matchday":   ("strike",   860, 1075),
+    "service-portrait":   ("night",    860, 1075),
+    "service-brand":      ("dribble",  860, 1075),
 
     # Portfolio.
-    "work-01": ("dribble",   860, 1075),
-    "work-02": ("strike",    860, 1075),
-    "work-03": ("sideline",  860, 1075),
-    "work-04": ("cityscape", 860, 1075),
-
-    # Editorial splits.
-    "story-01": ("dribble",   860, 1075),
-    "story-02": ("cityscape", 860, 1075),
+    "work-01": ("dribble",  860, 1075),
+    "work-02": ("strike",   860, 1075),
+    "work-03": ("run",      860, 1075),
+    "work-04": ("sideline", 860, 1075),
+    "work-05": ("night",    860, 1075),
+    "work-06": ("bench",   1400,  875),   # the landscape frame
 }
 
-# Tighter crops for the service cards, so they are not identical to the hero.
 ZOOM = {
     "service-recruiting": 1.35,
     "service-matchday": 1.30,
     "service-portrait": 1.25,
-    "service-brand": 1.40,
-    "work-01": 1.0, "work-02": 1.0, "work-03": 1.0, "work-04": 1.0,
+    "service-brand": 1.15,
+}
+
+# Per-slot focal overrides. A tight crop needs to sit higher than the frame's
+# natural centre or it takes the head off.
+FOCUS = {
+    "service-brand": (0.48, 0.38),
+    "service-recruiting": (0.30, 0.38),
+    "service-matchday": (0.45, 0.44),
 }
 
 
@@ -109,7 +120,8 @@ def main():
     print()
     total = 0
     for slot, (key, w, h) in SLOTS.items():
-        out = crop_to(loaded[key], w, h, SOURCES[key]["focus"], ZOOM.get(slot, 1.0))
+        focus = FOCUS.get(slot, SOURCES[key]["focus"])
+        out = crop_to(loaded[key], w, h, focus, ZOOM.get(slot, 1.0))
         # No exif= argument, so nothing is carried through.
         path = OUT / f"{slot}.webp"
         out.save(path, "WEBP", quality=84, method=6)

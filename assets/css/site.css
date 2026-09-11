@@ -677,7 +677,7 @@ h4, h5, h6 {
   align-items: end;
 }
 @media (min-width: 52rem) {
-  .hero-collage { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .hero-collage { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .hero-frame {
   position: relative;
@@ -695,14 +695,10 @@ h4, h5, h6 {
 .hero-frame:hover img { transform: scale(1.045); }
 /* staggered heights read as a skyline rather than a plain row */
 @media (min-width: 52rem) {
-  .hero-frame:nth-child(1) { aspect-ratio: 3 / 4;   margin-block-end: 2.5rem; }
-  .hero-frame:nth-child(2) { aspect-ratio: 3 / 4.6; margin-block-end: 0.75rem; }
-  .hero-frame:nth-child(3) { aspect-ratio: 3 / 5.1; }
-  .hero-frame:nth-child(4) { aspect-ratio: 3 / 4.6; margin-block-end: 0.75rem; }
-  .hero-frame:nth-child(5) { aspect-ratio: 3 / 4;   margin-block-end: 2.5rem; }
-}
-@media (max-width: 51.99rem) {
-  .hero-frame:nth-child(5) { display: none; }
+  .hero-frame:nth-child(1) { aspect-ratio: 3 / 4;   margin-block-end: 2rem; }
+  .hero-frame:nth-child(2) { aspect-ratio: 3 / 4.8; }
+  .hero-frame:nth-child(3) { aspect-ratio: 3 / 4.8; }
+  .hero-frame:nth-child(4) { aspect-ratio: 3 / 4;   margin-block-end: 2rem; }
 }
 
 /* --------------------------------------------------------------------------
@@ -821,7 +817,7 @@ h4, h5, h6 {
 
 .card-media {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
   background: var(--cream-2);
 }
@@ -888,6 +884,10 @@ h4, h5, h6 {
   grid-auto-flow: row dense;
   gap: clamp(0.75rem, 0.5rem + 1vw, 1.25rem);
 }
+/* Wider tracks, so the grid settles at three columns instead of four. With an
+   odd number of frames a 3+2 split reads better than 4 plus one orphan. */
+.gallery-three { grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)); }
+
 .gallery-item {
   position: relative;
   overflow: hidden;
@@ -1674,6 +1674,33 @@ h4, h5, h6 {
 .is-hidden { display: none !important; }
 .price-sm { font-size: var(--step-2); }
 .full-bleed-media { border-radius: var(--radius-lg); overflow: hidden; }
+
+/* A single landscape frame given the full column width, with its caption
+   sitting beneath rather than over the image. */
+.wide-frame { display: grid; gap: var(--sp-4); }
+.wide-frame img {
+  inline-size: 100%;
+  block-size: auto;
+  border-radius: var(--radius-lg);
+}
+.wide-frame figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-4);
+}
+.wide-frame figcaption .m {
+  font-size: var(--step--2);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brass-ink);
+}
+.wide-frame figcaption .t {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  letter-spacing: 0.02em;
+}
 
 /* --------------------------------------------------------------------------
    25. Motion

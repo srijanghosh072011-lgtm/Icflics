@@ -11,11 +11,15 @@ To swap in a real photo: drop it into public/assets/img/ under the same
 filename. No markup changes needed.
 
 Requires: pip install Pillow fonttools brotli
-Usage:    python3 scripts/make-placeholders.py
+Real photographs now occupy most slots. This script will NOT overwrite an
+existing file unless --force is passed, so running it can never clobber them.
+
+Usage:    python3 scripts/make-placeholders.py [--force]
 """
 
 import math
 import random
+import sys
 import tempfile
 from pathlib import Path
 
@@ -232,47 +236,39 @@ def draw_og(img, title, subtitle):
 # ---------------------------------------------------------------------------
 
 SLOTS = [
-    # Hero collage — five vertical frames
-    ("hero-01", 900, 1200, "Portrait · athlete, held gaze"),
-    ("hero-02", 900, 1380, "Action · sprint, low angle"),
-    ("hero-03", 900, 1530, "Detail · boots, grass, chalk"),
-    ("hero-04", 900, 1380, "Action · aerial duel"),
-    ("hero-05", 900, 1200, "Portrait · kit, studio light"),
+    # Mirrors the slots the pages actually reference. Real photographs occupy
+    # all of these today; this exists so a missing one degrades to a labelled
+    # frame rather than a broken image.
+    ("hero-01", 870, 1160, "Touchline portrait"),
+    ("hero-02", 870, 1160, "Action - on the ball"),
+    ("hero-03", 870, 1160, "Action - running on, evening light"),
+    ("hero-04", 870, 1160, "Action - striking the ball"),
 
-    # Services
-    ("service-recruiting", 1200, 900, "Recruiting · clean background frame"),
-    ("service-matchday", 1200, 900, "Match day · peak action, long lens"),
-    ("service-portrait", 1200, 900, "Editorial portrait · controlled light"),
-    ("service-brand", 1200, 900, "Brand content · vertical social crops"),
+    ("service-recruiting", 860, 1075, "Recruiting - clean background frame"),
+    ("service-matchday", 860, 1075, "Match day - peak action"),
+    ("service-portrait", 860, 1075, "Editorial portrait - controlled light"),
+    ("service-brand", 860, 1075, "Brand content - vertical crop"),
 
-    # Story / about
-    ("story-01", 1100, 1375, "Behind the scenes · working the sideline"),
-    ("story-02", 1400, 1050, "Contact sheet · selects laid out"),
-    ("portrait-owner", 1000, 1250, "Owner portrait · replace with real headshot"),
-
-    # Portfolio grid
-    ("work-01", 1200, 1500, "Signing day · pen, table, teammates"),
-    ("work-02", 1200, 1500, "Portrait · shadow across the face"),
-    ("work-03", 1600, 1067, "Wide · stadium at golden hour"),
-    ("work-04", 1200, 1500, "Action · slide tackle, turf spray"),
-    ("work-05", 1200, 1500, "Detail · taped wrists, chalked hands"),
-    ("work-06", 1600, 1067, "Wide · walking out of the tunnel"),
-    ("work-07", 1200, 1500, "Portrait · profile against dark"),
-    ("work-08", 1200, 1500, "Action · header, ball frozen"),
-    ("work-09", 1200, 1500, "Celebration · arms out, crowd blur"),
-    ("work-10", 1600, 1067, "Wide · empty pitch, floodlights"),
-    ("work-11", 1200, 1500, "Detail · gloves, grip, sweat"),
-    ("work-12", 1200, 1500, "Portrait · bench, exhale, post-match"),
+    ("work-01", 860, 1075, "Match day - on the ball"),
+    ("work-02", 860, 1075, "Match day - the strike"),
+    ("work-03", 860, 1075, "Match day - golden hour"),
+    ("work-04", 860, 1075, "Portrait - waiting on the line"),
+    ("work-05", 860, 1075, "Off the field - after hours"),
+    ("work-06", 1400, 875, "Between play - the sideline"),
 ]
 
-NUMERALS = ["7", "10", "9", "4", "11", "1", "8", "23", "6", "3", "5", "2"]
 
 
 def main():
     IMG_DIR.mkdir(parents=True, exist_ok=True)
+    force = "--force" in sys.argv
     total = 0
+    skipped = 0
 
     for i, (name, w, h, note) in enumerate(SLOTS):
+        if (IMG_DIR / f"{name}.webp").exists() and not force:
+            skipped += 1
+            continue
         img = make_image(
             w, h, seed=i * 13 + 5,
             label_bottom=note,
@@ -306,7 +302,10 @@ def main():
         ico.save(ROOT / "public" / fname, "PNG", optimize=True)
         print(f"  public/{fname}  {px}x{px}")
 
-    print(f"\n{len(SLOTS)} frames, {total}KB total.")
+    if skipped:
+        print(f"\n  {skipped} slot(s) skipped: a file is already there.")
+        print("  Pass --force to overwrite, which will destroy real photographs.")
+    print(f"\n{len(SLOTS) - skipped} frames written, {total}KB.")
     print("Replace any file in public/assets/img/ with a real photo of the same")
     print("name to swap it in — no markup changes needed.")
 

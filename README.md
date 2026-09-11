@@ -155,6 +155,29 @@ Remember to update each image's `alt` text to describe the real photo.
 
 ---
 
+## Why there are HTML files in the repository root
+
+GitHub Pages on this repo is set to **Deploy from a branch**, and that mode
+serves the branch **root**. With only `README.md` there, Pages rendered the
+readme through Jekyll instead of the site — a white page with the repo name on
+it. So the built preview is committed to the root alongside a `.nojekyll` file.
+
+**`public/` is still the source of truth.** The root copies are generated
+output. After changing anything in `public/`, regenerate them:
+
+```bash
+npm run preview:root
+```
+
+then commit the result, or the preview goes stale.
+
+If you switch the Pages source to **GitHub Actions**, the workflow in
+`.github/workflows/pages.yml` publishes `dist/` for you and every one of those
+root files can be deleted. None of this affects Cloudflare Pages, which serves
+`public/` directly and is the real deployment.
+
+---
+
 ## A note on the chrome
 
 The header and footer are duplicated in each HTML file. That is deliberate:

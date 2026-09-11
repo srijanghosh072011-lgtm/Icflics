@@ -12,7 +12,8 @@
     "set-domain": "node scripts/set-domain.mjs",
     "check": "node scripts/preflight.mjs",
     "deploy": "wrangler pages deploy public",
-    "sitemap": "node scripts/build-sitemap.mjs"
+    "sitemap": "node scripts/build-sitemap.mjs",
+    "preview:root": "node scripts/build-ghpages.mjs --base /Icflics && node scripts/copy-to-root.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.131.0"

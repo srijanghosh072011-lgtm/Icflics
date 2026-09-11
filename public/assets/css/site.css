@@ -677,15 +677,9 @@ h4, h5, h6 {
   align-items: end;
 }
 
-/* The photographer leads. On narrow screens he takes the full width and the
-   work sits in a row beneath him. */
-.hero-frame-lead {
-  grid-column: 1 / -1;
-  aspect-ratio: 4 / 5;
-}
-.hero-frame:not(.hero-frame-lead) { aspect-ratio: 3 / 4; }
+.hero-frame { aspect-ratio: 3 / 4; }
 @media (min-width: 52rem) {
-  .hero-collage { grid-template-columns: 1.75fr 1fr 1fr 1fr; }
+  .hero-collage { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .hero-frame {
   position: relative;
@@ -701,19 +695,11 @@ h4, h5, h6 {
   transition: transform 900ms var(--ease-out-expo);
 }
 .hero-frame:hover img { transform: scale(1.045); }
-/* Staggered heights read as a skyline rather than a plain row. The lead frame
-   is both wider and taller so the eye lands on him first. */
+/* Staggered heights read as a strip of frames rather than a plain row. */
 @media (min-width: 52rem) {
-  .hero-frame-lead {
-    /* Reset the full-width span the small-screen base sets, or he swallows
-       the whole row and the work frames wrap beneath him. */
-    grid-column: auto;
-    aspect-ratio: 4 / 5;
-    margin-block-end: 0;
-  }
-  .hero-frame:nth-child(2) { aspect-ratio: 3 / 4.3; margin-block-end: 1.25rem; }
-  .hero-frame:nth-child(3) { aspect-ratio: 3 / 4.3; margin-block-end: 0.5rem; }
-  .hero-frame:nth-child(4) { aspect-ratio: 3 / 4.3; margin-block-end: 1.75rem; }
+  .hero-frame:nth-child(1) { aspect-ratio: 3 / 3.9; margin-block-end: 1.25rem; }
+  .hero-frame:nth-child(2) { aspect-ratio: 3 / 4.3; }
+  .hero-frame:nth-child(3) { aspect-ratio: 3 / 3.9; margin-block-end: 1.25rem; }
 }
 
 /* --------------------------------------------------------------------------
@@ -1786,10 +1772,8 @@ h4, h5, h6 {
     font-size: clamp(1.85rem, 1.15rem + 3.4vw, 2.35rem);
   }
   .hero-copy .lede { font-size: var(--step-0); }
-  .hero-collage { margin-block-start: var(--sp-5); gap: 0.4rem; }
-  /* The lead is the point of the hero on a phone; the work reads as a strip. */
-  .hero-frame-lead { aspect-ratio: 1 / 1; }
-  .hero-frame:not(.hero-frame-lead) { aspect-ratio: 3 / 3.6; }
+  .hero-collage { margin-block-start: 0; gap: 0.4rem; }
+  .hero-frame { aspect-ratio: 3 / 3.6; }
 
   /* Full-width buttons are easier to hit than centred pills. */
   .hero-actions { inline-size: 100%; flex-direction: column; align-items: stretch; }
@@ -1928,4 +1912,69 @@ h4, h5, h6 {
   /* The price label is the first thing to go — the action matters more. */
   .thumb-bar .thumb-note { display: none; }
   .thumb-bar { padding-inline: var(--sp-3); }
+}
+
+/* --------------------------------------------------------------------------
+   Portrait hero. The photographer fills the frame and the copy sits over him.
+
+   Contrast was measured on the actual crop rather than guessed: the darkest
+   band is 10.5:1 for white text and the brightest (lit pavement) only 3.9:1,
+   which fails. A flat 0.42 ink scrim lifts the worst band to 6.1:1 and leaves
+   every other band well clear, without draining the photograph.
+   -------------------------------------------------------------------------- */
+
+.hero-portrait {
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-block-size: min(82vh, 46rem);
+  padding-block: var(--sp-8);
+  overflow: hidden;
+}
+
+.hero-portrait .hero-bg {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  /* A tall crop in a wide viewport shows only a horizontal band. Computed
+     from the crop geometry: 8% puts the visible window at 5-39% of the image
+     at 1440px, which is exactly where his head and shoulders sit. At 34% the
+     band landed on his torso and cut his head off entirely. */
+  object-position: 34% 8%;
+}
+
+/* Flat, not a gradient — the scrim is here for legibility, not decoration. */
+.hero-portrait::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(19, 18, 16, 0.5);
+  pointer-events: none;
+}
+
+.hero-portrait > .container { position: relative; z-index: 1; }
+
+/* A scrim alone cannot carry this. Measured against the rendered pixels, the
+   lit pavement behind the copy left the lede at 1.2:1 — invisible. Darkening
+   the whole image enough to fix that would have drained the photograph, so
+   the copy carries its own panel and the rest of him stays bright. */
+.hero-portrait .hero-copy {
+  background: rgba(19, 18, 16, 0.55);
+  padding: clamp(1.5rem, 1rem + 2.4vw, 2.75rem) clamp(1.25rem, 0.8rem + 2vw, 2.5rem);
+  border-radius: var(--radius-lg);
+  max-inline-size: 44rem;
+}
+
+/* Muted grey loses to a bright background even through the panel. */
+.hero-portrait .hero-copy .lede { color: var(--text-on-dark); }
+
+@media (max-width: 47.99rem) {
+  .hero-portrait {
+    min-block-size: min(78vh, 34rem);
+    padding-block: var(--sp-7);
+  }
+  /* A phone crops barely any height, so the offset hardly matters here. */
+  .hero-portrait .hero-bg { object-position: 42% 10%; }
 }

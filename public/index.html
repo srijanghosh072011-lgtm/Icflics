@@ -82,7 +82,7 @@
       "name": "Icflic — Sports & Soccer Photography for Athletes",
       "isPartOf": { "@id": "https://icflic.com/#website" },
       "about": { "@id": "https://icflic.com/#business" },
-      "primaryImageOfPage": "https://icflic.com/assets/img/hero-01.webp?v=580fdb9e",
+      "primaryImageOfPage": "https://icflic.com/assets/img/hero-01.webp",
       "inLanguage": "en-US"
     },
     {
@@ -183,7 +183,10 @@
 <main id="main">
 
   <!-- Hero -->
-  <section class="hero" data-ground="dark">
+  <section class="hero hero-portrait" data-ground="dark">
+    <img class="hero-bg" src="/assets/img/hero-bg.webp?v=d9bb7e8b" width="1100" height="1650"
+         fetchpriority="high" decoding="async"
+         alt="Portrait of the photographer behind Icflic, standing against a dark wall on a lit city street at night.">
     <div class="container">
       <div class="hero-copy">
         <p class="eyebrow-pill"><span class="dot" aria-hidden="true"></span>Recruiting &middot; Match day &middot; Portraits</p>
@@ -193,13 +196,13 @@
           <a class="btn btn-lg" href="/book">Check availability <span class="arrow" aria-hidden="true">&#8599;</span></a>
           <a class="btn btn-lg btn-ghost" href="/work">See the work</a>
         </div>
-      </div>
+    </div>
+  </section>
 
+  <!-- The work, directly under him -->
+  <section class="section-tight" data-ground="dark">
+    <div class="container">
       <div class="hero-collage">
-        <figure class="hero-frame hero-frame-lead">
-          <img src="/assets/img/hero-01.webp?v=580fdb9e" width="980" height="1225" fetchpriority="high" decoding="async"
-               alt="Portrait of the photographer behind Icflic, in profile against a dark wall on a lit city street at night.">
-        </figure>
         <figure class="hero-frame">
           <img src="/assets/img/hero-02.webp?v=8e887db1" width="870" height="1160" loading="lazy" decoding="async"
                alt="Number 27 drives at the defence with the ball at his feet, the background streaked with motion.">

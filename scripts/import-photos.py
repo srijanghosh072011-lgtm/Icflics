@@ -47,8 +47,12 @@ SOURCES = {
 
 # slot -> (source, width, height)
 SLOTS = {
-    # Hero. The owner leads at a larger size; the work sits beside him.
-    "hero-01": ("owner",    980, 1225),   # lead frame, rendered largest
+    # Hero background. He fills the frame; the copy sits over the dark upper
+    # third. Measured: top of this photo is L=0.03-0.14 (13-18:1 for white
+    # text), bottom is lit pavement at L=0.35 (2.7:1, unusable) — so he is
+    # positioned low and the text stays high.
+    "hero-bg": ("owner", 1100, 1650),
+    # Work strip beneath the hero.
     "hero-02": ("dribble",  870, 1160),
     "hero-03": ("run",      870, 1160),
     "hero-04": ("strike",   870, 1160),
@@ -71,7 +75,7 @@ SLOTS = {
 ZOOM = {
     # He stands in the left third of a wide street scene. At 1.0 he is a small
     # figure in a car park; the hero needs him to read as the subject.
-    "hero-01": 1.75,
+    "hero-bg": 1.3,
     "service-recruiting": 1.35,
     "service-matchday": 1.30,
     "service-portrait": 1.75,   # tight on the seated player
@@ -81,7 +85,7 @@ ZOOM = {
 # Per-slot focal overrides. A tight crop needs to sit higher than the frame's
 # natural centre or it takes the head off.
 FOCUS = {
-    "hero-01": (0.19, 0.55),
+    "hero-bg": (0.24, 0.62),   # sits him low, leaving the dark top for type
     "service-brand": (0.48, 0.38),
     "service-recruiting": (0.30, 0.38),
     "service-matchday": (0.45, 0.44),

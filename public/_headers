@@ -1,0 +1,71 @@
+# Cloudflare Pages custom headers.
+# Verify after each deploy at https://securityheaders.com
+#
+# NOTE ON THE CSP: every script, style, font and image is served from this
+# origin, so no third-party host is listed. If you later add something —
+# Turnstile, analytics, an embedded video — you MUST add its host here or the
+# browser will silently block it. The two lines you would need for Cloudflare
+# Turnstile are noted at the bottom of this file.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; media-src 'self'; worker-src 'self'; manifest-src 'self'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), autoplay=(), browsing-topics=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Cross-Origin-Embedder-Policy: credentialless
+  X-DNS-Prefetch-Control: off
+  X-Permitted-Cross-Domain-Policies: none
+
+# HTML is revalidated every time so a content change is live immediately.
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Fonts are content-stable: a given file never changes.
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# CSS and JS revalidate hourly, so a fix reaches visitors the same day.
+/assets/css/*
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/assets/js/*
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# Images cache for a day. Photos are swapped by filename, so a long immutable
+# cache would leave returning visitors looking at the old frame.
+/assets/img/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=86400
+
+# The API is per-request and per-user. Never cache it anywhere.
+/api/*
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+  Pragma: no-cache
+  X-Robots-Tag: noindex, nofollow
+
+# The owner panel must never be indexed or cached.
+/owner
+  Cache-Control: no-store, max-age=0
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/owner/*
+  Cache-Control: no-store, max-age=0
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+# ---------------------------------------------------------------------------
+# If you switch Cloudflare Turnstile on (see .env.example), extend the CSP
+# above so these two directives include the challenges host:
+#
+#   script-src 'self' https://challenges.cloudflare.com;
+#   frame-src https://challenges.cloudflare.com;
+#
+# Add nothing else. Every extra host in a CSP is another thing that can be
+# compromised on your behalf.
+# ---------------------------------------------------------------------------

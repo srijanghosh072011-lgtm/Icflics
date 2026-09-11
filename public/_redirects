@@ -1,0 +1,12 @@
+# Cloudflare Pages redirects. First match wins.
+
+# Convenience aliases for the private panel.
+/admin      /owner   301
+/login      /owner   301
+/dashboard  /owner   301
+
+# Common alternate spellings people type for the booking page.
+/booking    /book    301
+/schedule   /book    301
+/portfolio  /work    301
+/pricing    /services 301

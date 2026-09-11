@@ -1,0 +1,11 @@
+name = "icflic-site"
+pages_build_output_dir = "public"
+compatibility_date = "2025-09-01"
+
+# Cloudflare D1 — the booking database.
+# Create it once with:  npx wrangler d1 create icflic-db
+# then paste the returned database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "icflic-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"

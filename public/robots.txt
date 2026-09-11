@@ -1,0 +1,51 @@
+# https://icflic.com/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /owner
+Disallow: /owner/
+Disallow: /api/
+
+# Answer engines and AI crawlers are welcome on the public pages. The site is
+# written to be quotable: clear questions, direct answers, no dark patterns.
+User-agent: GPTBot
+Allow: /
+Disallow: /owner/
+Disallow: /api/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /owner/
+Disallow: /api/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /owner/
+Disallow: /api/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /owner/
+Disallow: /api/
+
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /owner/
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /owner/
+Disallow: /api/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /owner/
+Disallow: /api/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /owner/
+Disallow: /api/
+
+Sitemap: https://icflic.com/sitemap.xml

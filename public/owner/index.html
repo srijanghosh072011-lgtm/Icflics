@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Owner panel — Icflic</title>
+<meta name="description" content="Private booking panel.">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="theme-color" content="#131210">
+
+<link rel="preload" href="/assets/fonts/bodonimoda-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/owner.css">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+</head>
+<body class="owner-body">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header" data-ground="dark">
+  <div class="container header-inner">
+    <a class="brand" href="/" aria-label="Icflic — home">
+      <span class="brand-mark" aria-hidden="true">IC</span>
+      <span>
+        <span class="brand-word">Icflic</span>
+        <span class="brand-sub">Owner panel</span>
+      </span>
+    </a>
+    <div class="header-actions">
+      <button class="btn btn-sm btn-ghost is-hidden" type="button" id="sign-out">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <h1 class="visually-hidden">Icflic owner panel</h1>
+
+  <!-- ------------------------------------------------------------- SIGN IN -->
+  <section class="section" id="signin-view" data-ground="dark">
+    <div class="container container-narrow">
+      <div class="signin-card">
+        <p class="eyebrow">Private</p>
+        <h2 class="display-caps display-sm">Owner sign-in</h2>
+        <p class="lede mt-4">This panel is for the studio only. Everything below the sign-in is invisible until you are authenticated.</p>
+
+        <form id="signin-form" class="stack-lg mt-6" novalidate>
+          <div class="field">
+            <label for="o-email">Email</label>
+            <input class="input" type="email" id="o-email" name="email" autocomplete="username"
+                   required maxlength="200" autocapitalize="off" spellcheck="false">
+          </div>
+          <div class="field">
+            <label for="o-password">Password</label>
+            <input class="input" type="password" id="o-password" name="password"
+                   autocomplete="current-password" required maxlength="400">
+          </div>
+          <div id="signin-feedback" role="alert" aria-live="assertive"></div>
+          <button class="btn btn-lg btn-block" type="submit" id="signin-submit">Sign in</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ----------------------------------------------------------- DASHBOARD -->
+  <div id="panel-view" class="is-hidden">
+
+    <section class="page-head" data-ground="dark">
+      <div class="container">
+        <p class="eyebrow">Dashboard</p>
+        <h2 class="display-caps display-md">Bookings</h2>
+        <p class="lede mt-4" id="panel-summary">&nbsp;</p>
+      </div>
+    </section>
+
+    <!-- Master switch -->
+    <section class="section-tight">
+      <div class="container">
+        <div class="panel-card">
+          <div class="switch-row">
+            <div>
+              <h2 class="display-caps display-sm">Taking bookings</h2>
+              <p class="text-muted mt-2" id="switch-caption">&nbsp;</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="booking-toggle">
+              <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+              <span class="visually-hidden">Accept new bookings</span>
+            </label>
+          </div>
+
+          <div class="field mt-5">
+            <label for="paused-message">Message shown while bookings are closed</label>
+            <textarea class="textarea" id="paused-message" maxlength="500"
+                      placeholder="Bookings reopen in the new year."></textarea>
+            <p class="hint">Visitors see this on the booking page instead of the calendar.</p>
+          </div>
+
+          <div class="cluster mt-4">
+            <button class="btn" type="button" id="save-settings">Save</button>
+            <span id="settings-feedback" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabs -->
+    <section class="section-tight">
+      <div class="container">
+        <div class="tabs" role="tablist" aria-label="Panel sections">
+          <button class="tab" role="tab" id="tab-requests" aria-controls="pane-requests" aria-selected="true">Requests</button>
+          <button class="tab" role="tab" id="tab-blackouts" aria-controls="pane-blackouts" aria-selected="false">Blocked time</button>
+          <button class="tab" role="tab" id="tab-hours" aria-controls="pane-hours" aria-selected="false">Weekly hours</button>
+          <button class="tab" role="tab" id="tab-messages" aria-controls="pane-messages" aria-selected="false">Messages</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Requests -->
+    <section class="section-tight" id="pane-requests" role="tabpanel" aria-labelledby="tab-requests">
+      <div class="container">
+        <div class="cluster mb-5">
+          <button class="chip is-active" type="button" data-filter="all">All</button>
+          <button class="chip" type="button" data-filter="pending">Pending</button>
+          <button class="chip" type="button" data-filter="confirmed">Confirmed</button>
+          <button class="chip" type="button" data-filter="declined">Declined</button>
+          <button class="chip" type="button" data-filter="cancelled">Cancelled</button>
+        </div>
+        <div id="bookings-list" class="stack"></div>
+      </div>
+    </section>
+
+    <!-- Blackouts -->
+    <section class="section-tight is-hidden" id="pane-blackouts" role="tabpanel" aria-labelledby="tab-blackouts">
+      <div class="container">
+        <div class="panel-card mb-6">
+          <h2 class="display-caps display-sm mb-5">Block out time</h2>
+          <p class="text-muted mb-5">Anything overlapping a blocked window disappears from the public calendar. Leave the times empty to block whole days.</p>
+          <div class="form-row form-row-2">
+            <div class="field">
+              <label for="b-start-date">From date</label>
+              <input class="input" type="date" id="b-start-date">
+            </div>
+            <div class="field">
+              <label for="b-start-time">From time (optional)</label>
+              <input class="input" type="time" id="b-start-time" step="900">
+            </div>
+          </div>
+          <div class="form-row form-row-2 mt-5">
+            <div class="field">
+              <label for="b-end-date">To date</label>
+              <input class="input" type="date" id="b-end-date">
+            </div>
+            <div class="field">
+              <label for="b-end-time">To time (optional)</label>
+              <input class="input" type="time" id="b-end-time" step="900">
+            </div>
+          </div>
+          <div class="field mt-5">
+            <label for="b-reason">Reason (private)</label>
+            <input class="input" type="text" id="b-reason" maxlength="200" placeholder="Away, exams, already committed">
+          </div>
+          <div class="cluster mt-5">
+            <button class="btn" type="button" id="add-blackout">Block this time</button>
+            <span id="blackout-feedback" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+        <div id="blackouts-list" class="stack"></div>
+      </div>
+    </section>
+
+    <!-- Weekly hours -->
+    <section class="section-tight is-hidden" id="pane-hours" role="tabpanel" aria-labelledby="tab-hours">
+      <div class="container">
+        <div class="panel-card">
+          <h2 class="display-caps display-sm mb-5">Weekly hours</h2>
+          <p class="text-muted mb-5">The recurring window each day when sessions can be booked. Uncheck a day to take it off the calendar entirely.</p>
+          <div id="hours-list" class="stack"></div>
+          <div class="cluster mt-6">
+            <button class="btn" type="button" id="save-hours">Save weekly hours</button>
+            <span id="hours-feedback" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Messages -->
+    <section class="section-tight is-hidden" id="pane-messages" role="tabpanel" aria-labelledby="tab-messages">
+      <div class="container">
+        <div id="messages-list" class="stack"></div>
+      </div>
+    </section>
+
+    <div class="container">
+      <p class="form-note mt-7 mb-6" id="panel-footnote">&nbsp;</p>
+    </div>
+  </div>
+</main>
+
+<script src="/assets/js/owner.js" defer></script>
+</body>
+</html>

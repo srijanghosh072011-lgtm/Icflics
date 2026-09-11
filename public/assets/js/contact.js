@@ -68,7 +68,15 @@
         elapsed: Date.now() - renderedAt,
       }),
     })
-      .then(function (response) { return response.json(); })
+      .then(function (response) {
+        var type = response.headers.get('content-type') || '';
+        if (!type.includes('application/json')) {
+          var err = new Error('no-backend');
+          err.noBackend = true;
+          throw err;
+        }
+        return response.json();
+      })
       .then(function (data) {
         if (!data.ok) {
           submit.disabled = false;
@@ -81,9 +89,14 @@
         submit.textContent = 'Sent';
         notice('ok', 'Message sent. You will get a reply within 48 hours.');
       })
-      .catch(function () {
+      .catch(function (error) {
         submit.disabled = false;
         submit.textContent = 'Send message';
+        if (error && error.noBackend) {
+          notice('warn', 'This is a static preview, so the form is not connected. '
+            + 'Email hello@icflic.com instead.');
+          return;
+        }
         notice('error',
           'The message could not be sent. Check your connection, or email hello@icflic.com.');
       });

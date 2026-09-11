@@ -1,0 +1,56 @@
+# Publish a static preview of the site to GitHub Pages.
+#
+# This is a PREVIEW ONLY. GitHub Pages cannot run the Cloudflare Pages
+# Functions in functions/, so the booking calendar, contact form and owner
+# panel are inert here and say so. The real deployment is Cloudflare Pages —
+# see docs/LAUNCH.md.
+
+name: Deploy preview to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - claude/nifty-maxwell-13ixof
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it mid-publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build the static preview
+        # The base path is the repo name, because a project Pages site is
+        # served from https://<user>.github.io/<repo>/ rather than the root.
+        run: node scripts/build-ghpages.mjs --base "/${{ github.event.repository.name }}"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

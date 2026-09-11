@@ -895,6 +895,9 @@ h4, h5, h6 {
 .gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  /* Dense packing backfills the holes that two-column tiles leave behind.
+     Without it the grid goes ragged and reads as broken rather than editorial. */
+  grid-auto-flow: row dense;
   gap: clamp(0.75rem, 0.5rem + 1vw, 1.25rem);
 }
 .gallery-item {
@@ -902,15 +905,30 @@ h4, h5, h6 {
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: var(--cream-2);
-  aspect-ratio: 4 / 5;
   display: block;
+  aspect-ratio: 4 / 5;
 }
-.gallery-item.is-wide { aspect-ratio: 3 / 2; }
+/* Below the two-column breakpoint a "wide" tile has nothing to be wide
+   against, so it stays 4:5 like everything else. Giving it a landscape ratio
+   there just makes it the odd one out in its row. */
+
 @media (min-width: 64rem) {
-  .gallery-item.is-wide { grid-column: span 2; }
+  /* A wide tile spans two columns and takes its height from the 4:5 tiles
+     beside it, so rows stay flush. Its own image is out of flow (below), so
+     it contributes no intrinsic height and simply stretches to the row.
+     The floor only matters in a row with no ordinary tile to measure. */
+  .gallery-item.is-wide {
+    grid-column: span 2;
+    aspect-ratio: auto;
+    min-block-size: 16rem;
+  }
   .gallery-item.is-tall { aspect-ratio: 4 / 6.4; grid-row: span 2; }
 }
+/* Absolutely positioned so the image never contributes intrinsic height —
+   that is what lets a wide tile stretch to its row instead of setting it. */
 .gallery-item img {
+  position: absolute;
+  inset: 0;
   inline-size: 100%;
   block-size: 100%;
   object-fit: cover;

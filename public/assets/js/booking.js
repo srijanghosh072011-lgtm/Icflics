@@ -121,7 +121,17 @@
       headers: { accept: 'application/json' },
       credentials: 'same-origin',
     })
-      .then(function (response) { return response.json(); })
+      .then(function (response) {
+        // A static host has no Functions runtime, so this path returns the
+        // 404 page rather than JSON. Say that plainly instead of failing.
+        var type = response.headers.get('content-type') || '';
+        if (!type.includes('application/json')) {
+          var err = new Error('no-backend');
+          err.noBackend = true;
+          throw err;
+        }
+        return response.json();
+      })
       .then(function (data) {
         state.loading = false;
         if (!data.ok) throw new Error(data.error || 'Failed');
@@ -134,14 +144,30 @@
           closedMsg.textContent = data.message || '';
           closedBox.classList.remove('is-hidden');
           form.classList.add('is-hidden');
+          // The intro promises a calendar. There isn't one right now.
+          var intro = document.getElementById('book-intro');
+          if (intro) {
+            intro.textContent =
+              'The booking calendar is paused at the moment. Here is what to do instead.';
+          }
           return;
         }
 
         state.days = data.days || {};
         render();
       })
-      .catch(function () {
+      .catch(function (error) {
         state.loading = false;
+        if (error && error.noBackend) {
+          closedMsg.textContent = 'This is a static preview of the site, so the live '
+            + 'calendar is not connected. On the real deployment this shows genuine '
+            + 'availability and takes bookings.';
+          closedBox.classList.remove('is-hidden');
+          form.classList.add('is-hidden');
+          var intro = document.getElementById('book-intro');
+          if (intro) intro.textContent = 'A preview of the booking page.';
+          return;
+        }
         status.textContent =
           'Availability could not be loaded. Please reload, or email hello@icflic.com.';
       });

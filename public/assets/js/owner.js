@@ -78,6 +78,12 @@
       if (csrf) config.headers['x-csrf-token'] = csrf;
     }
     return fetch(path, config).then(function (response) {
+      var type = response.headers.get('content-type') || '';
+      if (!type.includes('application/json')) {
+        // No Functions runtime behind this host.
+        return { status: response.status, body: { ok: false, noBackend: true,
+          error: 'This is a static preview. Sign-in needs the Cloudflare deployment.' } };
+      }
       return response.json().then(function (body) {
         return { status: response.status, body: body };
       });

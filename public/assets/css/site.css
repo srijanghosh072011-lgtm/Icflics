@@ -1739,3 +1739,172 @@ h4, h5, h6 {
   .hero, .page-head, [data-ground] { background: #fff !important; color: #000 !important; }
   a[href^='http']::after { content: ' (' attr(href) ')'; font-size: 0.8em; }
 }
+
+
+/* ==========================================================================
+   Phone-first adjustments.
+
+   The audience is athletes, and athletes are on phones. A desktop layout that
+   merely shrinks put the home page at 14.5 screens of scrolling, which nobody
+   thumbs through. These rules cut the height, turn stacked rows into swipes,
+   and keep the booking action inside thumb reach.
+   ========================================================================== */
+
+@media (max-width: 47.99rem) {
+
+  /* ---- Tighter vertical rhythm ------------------------------------------ */
+  :root {
+    --section-y: clamp(2.25rem, 1.5rem + 4vw, 3.25rem);
+    /* The header is pinned, so every pixel of it is a pixel of the screen
+       permanently spent. */
+    --header-h: 3.9rem;
+  }
+  .section-head { margin-block-end: var(--sp-6); }
+  .stack-lg { gap: var(--sp-5); }
+
+  /* ---- Hero ------------------------------------------------------------- */
+  .hero { padding-block-start: var(--sp-6); }
+  .hero-copy { gap: var(--sp-4); }
+  .hero-copy h1 { max-inline-size: 16ch; }
+  /* Two frames are enough of a taste on a phone; the rest is scroll cost. */
+  .hero-collage { margin-block-start: var(--sp-6); }
+  .hero-frame:nth-child(n + 3) { display: none; }
+
+  /* Full-width buttons are easier to hit than centred pills. */
+  .hero-actions { inline-size: 100%; flex-direction: column; align-items: stretch; }
+  .hero-actions .btn { inline-size: 100%; }
+
+  /* ---- Galleries: two up, not one --------------------------------------- */
+  .gallery,
+  .gallery-three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .gallery-caption { padding: var(--sp-3); }
+  .gallery-caption .t { font-size: var(--step--1); }
+  /* Captions are hover-revealed, and phones have no hover. Show them. */
+  .gallery-item .gallery-caption { opacity: 1; transform: none; }
+
+  /* ---- Card rows become a swipe ----------------------------------------- */
+  /* Four stacked cards was roughly four screens on its own. A scroll-snap
+     rail is one screen, and swiping is the native gesture here. */
+  /* Scoped to grids of cards. A row of three short text blocks reads worse
+     as a rail than as a stack, and hiding two thirds of it behind a swipe
+     loses information the reader needs. */
+  .grid-3:has(> .card),
+  .grid-4:has(> .card),
+  .grid-3:has(> .package),
+  .grid-4:has(> .package) {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 78%;
+    grid-template-columns: none;
+    gap: var(--sp-4);
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    /* Break out of the container so the rail bleeds to both edges. */
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    padding-block-end: var(--sp-3);
+    scrollbar-width: none;
+  }
+  .grid-3:has(> .card)::-webkit-scrollbar,
+  .grid-4:has(> .card)::-webkit-scrollbar,
+  .grid-3:has(> .package)::-webkit-scrollbar,
+  .grid-4:has(> .package)::-webkit-scrollbar { display: none; }
+  .grid-3 > .card, .grid-4 > .card,
+  .grid-3 > .package, .grid-4 > .package { scroll-snap-align: start; }
+
+  /* A portrait card image is 487px tall at this width. Too much. */
+  .card-media { aspect-ratio: 1 / 1; }
+  .card-body { padding: var(--sp-4); gap: var(--sp-2); }
+
+  /* ---- Everything else that stacked ------------------------------------- */
+  .split { gap: var(--sp-5); }
+  .split-media { aspect-ratio: 4 / 3; }
+  .steps { gap: var(--sp-5); }
+  .stats { gap: var(--sp-4); }
+  .logo-chip { min-block-size: 4.25rem; padding: var(--sp-4) var(--sp-3); }
+  .marquee { padding-block: 0.65rem; }
+
+  /* ---- Booking ---------------------------------------------------------- */
+  .cal { padding: var(--sp-4); }
+  .cal-day { font-size: var(--step--2); }
+  .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .slot { padding: 0.9rem 0.5rem; }
+  .summary-card { position: static; }
+
+  .cta-band { padding: var(--sp-7) var(--sp-5); }
+  .cta-band .cluster { inline-size: 100%; flex-direction: column; }
+  .cta-band .btn { inline-size: 100%; }
+}
+
+/* --------------------------------------------------------------------------
+   Thumb bar. A booking business on a phone should never be more than one
+   thumb away from its booking action.
+   -------------------------------------------------------------------------- */
+
+.thumb-bar {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 90;
+  display: none;
+  gap: var(--sp-3);
+  align-items: center;
+  padding: var(--sp-3) var(--gutter);
+  padding-block-end: calc(var(--sp-3) + env(safe-area-inset-bottom, 0px));
+  background: rgba(19, 18, 16, 0.94);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border-block-start: var(--hairline) solid rgba(246, 241, 231, 0.14);
+  transform: translateY(110%);
+  transition: transform var(--dur) var(--ease-out-expo);
+}
+.thumb-bar[data-show='true'] { transform: translateY(0); }
+.thumb-bar .btn { flex: 1; padding-block: 1rem; }
+.thumb-bar .thumb-note {
+  flex: none;
+  font-size: var(--step--2);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-on-dark-muted);
+}
+
+@media (max-width: 61.99rem) {
+  .thumb-bar { display: flex; }
+  /* Keep the footer clear of the bar. */
+  body.has-thumb-bar { padding-block-end: 5.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumb-bar { transition: none; }
+}
+
+/* --------------------------------------------------------------------------
+   Very small phones (320px — iPhone SE, older Androids).
+   Buttons are nowrap by default, which gives them a min-width wider than the
+   screen once padding is added. That was pushing the page into horizontal
+   scroll.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 30rem) {
+  .btn {
+    padding-inline: 1.15rem;
+    white-space: normal;
+    text-align: center;
+  }
+  /* A display face cannot always fit a long word in 320px. Breaking is ugly;
+     a word running off the screen is worse. */
+  .display-caps,
+  h1, h2, h3 { overflow-wrap: break-word; }
+}
+
+@media (max-width: 24rem) {
+  /* The price label is the first thing to go — the action matters more. */
+  .thumb-bar .thumb-note { display: none; }
+  .thumb-bar { padding-inline: var(--sp-3); }
+}

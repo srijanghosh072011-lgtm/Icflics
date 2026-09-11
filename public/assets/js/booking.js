@@ -145,6 +145,14 @@
 
   function enterDemoMode() {
     state.demo = true;
+    // Demo slots are generated against the visitor's own clock, and nothing
+    // set a timezone because the request never reached a server.
+    try {
+      state.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    } catch (error) {
+      state.timezone = '';
+    }
+    setText('s-tz', state.timezone ? state.timezone.replace(/_/g, ' ') : 'your local time');
     var intro = document.getElementById('book-intro');
     if (intro) {
       intro.textContent = 'A preview of the booking page. The calendar below is '
@@ -278,9 +286,10 @@
     horizon.setDate(horizon.getDate() + state.maxDaysAhead);
     var pastHorizon = startOfMonth(month) > startOfMonth(horizon);
 
+    var zone = state.timezone ? state.timezone.replace(/_/g, ' ') : 'your local time';
     status.textContent = open
       ? open + ' date' + (open > 1 ? 's' : '') + ' open this month. Times shown in '
-        + state.timezone.replace(/_/g, ' ') + '.'
+        + zone + '.'
       : (pastHorizon
         ? 'The calendar opens about ' + Math.round(state.maxDaysAhead / 30)
           + ' months ahead. To plan further out, get in touch.'

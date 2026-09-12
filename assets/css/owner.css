@@ -76,7 +76,7 @@
 }
 .switch input:checked + .switch-track .switch-thumb { transform: translateX(1.6rem); }
 .switch input:focus-visible + .switch-track {
-  outline: 3px solid var(--flare);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -124,9 +124,9 @@
 }
 .chip:hover { border-color: var(--text-on-light); color: var(--text-on-light); }
 .chip.is-active {
-  background: var(--flare);
-  border-color: var(--flare);
-  color: var(--ink);
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--cream);
 }
 
 /* ---- Records ------------------------------------------------------------ */

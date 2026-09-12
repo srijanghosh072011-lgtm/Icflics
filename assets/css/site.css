@@ -65,14 +65,23 @@
   --cream-3:     #ddd2bd;   /* hairline on light */
   --chalk:       #ffffff;
 
-  /* Accents */
-  --flare:       #ff5a1f;   /* 6.0:1 on --ink. Buttons use ink text on flare. */
-  --flare-ink:   #c23e12;   /* 4.7:1 on --cream. Use for orange TEXT on light. */
-  --flare-soft:  #ffe9df;
+  /* Accent — there is only one.
+     The site is ink, cream and photographs; brass appears a handful of times
+     per page and never as a large fill. The green kit in the selective-colour
+     photographs is the only saturated colour on screen, and brass agrees with
+     it where the old orange fought it. */
+  --brass:       #c9a44c;   /* 7.9:1 on --ink. Marks and text on dark grounds. */
+  --brass-ink:   #7d6119;   /* 5.2:1 on --cream, 4.6:1 on --cream-2. Brass text
+                               on light grounds. Measured, not estimated: the
+                               previous #8a6c1f was labelled 4.9:1 but is
+                               actually 4.39:1 and failed AA for body text. */
+  --brass-soft:  #f2ead6;   /* hover tint on light grounds */
   --pitch:       #0e5f47;   /* deep field green; cream text sits at 6.8:1 */
   --pitch-deep:  #0a4735;
-  --brass:       #c9a44c;   /* 7.9:1 on --ink; hairlines, marks, eyebrows */
-  --brass-ink:   #8a6c1f;   /* 4.9:1 on --cream, for brass-toned text on light */
+
+  /* Focus ring. Brass itself is only 2.1:1 on cream, under the 3:1 WCAG asks
+     of a non-text indicator, so light grounds take the darker tone. */
+  --focus:       var(--brass-ink);
 
   /* Text roles */
   --text-on-dark:        #f6f1e7;   /* 14.6:1 on --ink */
@@ -178,14 +187,14 @@ ul, ol { margin: 0; padding: 0; }
 a { color: inherit; }
 
 :focus-visible {
-  outline: 3px solid var(--flare);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
   border-radius: 2px;
 }
 .on-dark :focus-visible,
 [data-ground='dark'] :focus-visible { outline-color: var(--brass); }
 
-::selection { background: var(--flare); color: var(--ink); }
+::selection { background: var(--brass); color: var(--ink); }
 
 .skip-link {
   position: absolute;
@@ -193,8 +202,8 @@ a { color: inherit; }
   top: var(--sp-4);
   z-index: 200;
   padding: 0.75rem 1.25rem;
-  background: var(--flare);
-  color: var(--ink);
+  background: var(--ink);
+  color: var(--cream);
   font-weight: 600;
   font-size: var(--step--1);
   letter-spacing: 0.04em;
@@ -278,32 +287,8 @@ h4, h5, h6 {
 }
 [data-ground='dark'] .eyebrow { color: var(--brass); }
 
-.eyebrow-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0.9rem 0.4rem 0.65rem;
-  border: var(--hairline) solid var(--cream-3);
-  border-radius: 999px;
-  background: var(--cream-2);
-  font-size: var(--step--2);
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-on-light-muted);
-}
-[data-ground='dark'] .eyebrow-pill {
-  border-color: var(--ink-3);
-  background: rgba(246, 241, 231, 0.05);
-  color: var(--text-on-dark-muted);
-}
-.eyebrow-pill .dot {
-  inline-size: 0.5rem;
-  block-size: 0.5rem;
-  border-radius: 50%;
-  background: var(--flare);
-  flex: none;
-}
+/* .eyebrow-pill lived here. Removed: it appeared once, on the hero, and the
+   ticker directly beneath it already carried the same three words. */
 
 .lede {
   font-size: var(--step-1);
@@ -319,7 +304,7 @@ h4, h5, h6 {
 .prose h2 { margin-block-start: var(--sp-8); }
 .prose h3 { margin-block-start: var(--sp-7); }
 .prose a {
-  color: var(--flare-ink);
+  color: var(--brass-ink);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
@@ -331,8 +316,8 @@ h4, h5, h6 {
 
 .text-muted { color: var(--text-on-light-muted); }
 [data-ground='dark'] .text-muted { color: var(--text-on-dark-muted); }
-.text-flare { color: var(--flare-ink); }
-[data-ground='dark'] .text-flare { color: var(--flare); }
+.text-accent { color: var(--brass-ink); }
+[data-ground='dark'] .text-accent { color: var(--brass); }
 
 /* --------------------------------------------------------------------------
    5. Layout primitives
@@ -405,14 +390,15 @@ h4, h5, h6 {
 
 /* --------------------------------------------------------------------------
    6. Buttons
-   Orange buttons carry INK text, not white: #131210 on #ff5a1f is 6.0:1,
-   white on #ff5a1f is only 3.1:1 and fails AA.
+   The primary button is the ground's opposite — ink on light, cream on dark —
+   so it is the highest-contrast element on the page without introducing a
+   colour at all. 15.4:1 either way.
    -------------------------------------------------------------------------- */
 
 .btn {
-  --btn-bg: var(--flare);
-  --btn-fg: var(--ink);
-  --btn-bd: var(--flare);
+  --btn-bg: var(--ink);
+  --btn-fg: var(--cream);
+  --btn-bd: var(--ink);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -440,6 +426,16 @@ h4, h5, h6 {
 .btn .arrow { transition: transform var(--dur-fast) var(--ease); }
 .btn:hover .arrow { transform: translate(3px, -3px); }
 
+/* An ink button vanishes on an ink ground. Invert it. Placed before the
+   ghost rules so those can win it back — they set --btn-bg explicitly for
+   exactly that reason. */
+[data-ground='dark'] .btn,
+[data-ground='pitch'] .btn {
+  --btn-bg: var(--cream);
+  --btn-fg: var(--ink);
+  --btn-bd: var(--cream);
+}
+
 .btn-ghost {
   --btn-bg: transparent;
   --btn-fg: var(--text-on-light);
@@ -448,6 +444,7 @@ h4, h5, h6 {
 .btn-ghost:hover { --btn-bd: var(--text-on-light); }
 [data-ground='dark'] .btn-ghost,
 [data-ground='pitch'] .btn-ghost {
+  --btn-bg: transparent;
   --btn-fg: var(--text-on-dark);
   --btn-bd: rgba(246, 241, 231, 0.28);
 }
@@ -477,7 +474,7 @@ h4, h5, h6 {
   text-decoration: none;
   padding-block-end: 0.3rem;
   border-block-end: var(--hairline) solid currentColor;
-  color: var(--flare-ink);
+  color: var(--brass-ink);
   transition: gap var(--dur-fast) var(--ease);
 }
 .link-line:hover { gap: 0.8rem; }
@@ -708,11 +705,11 @@ h4, h5, h6 {
 
 .marquee {
   --marquee-dur: 38s;
-  background: var(--flare);
-  color: var(--ink);
+  background: var(--ink);
+  color: var(--text-on-dark);
   padding-block: 0.9rem;
   overflow: hidden;
-  border-block: var(--hairline) solid rgba(19, 18, 16, 0.18);
+  border-block: var(--hairline) solid var(--ink-3);
 }
 .marquee-track {
   display: flex;
@@ -862,16 +859,15 @@ h4, h5, h6 {
 }
 /* Written after the [data-ground] .tag overrides so the accent tag wins
    on every ground, light or dark. */
-.tag-flare,
-[data-ground] .tag-flare {
-  background: var(--flare);
-  border-color: var(--flare);
+.tag-accent,
+[data-ground] .tag-accent {
+  background: var(--brass);
+  border-color: var(--brass);
   color: var(--ink);
 }
 
-/* .card-body is a grid; without this, pills stretch the full column. */
-.card-body .tag,
-.card-body .eyebrow-pill { justify-self: start; }
+/* .card-body is a grid; without this, tags stretch the full column. */
+.card-body .tag { justify-self: start; }
 
 /* --------------------------------------------------------------------------
    12. Gallery
@@ -1024,7 +1020,7 @@ h4, h5, h6 {
   color: var(--brass);
 }
 [data-ground='cream-2'] .stat .n,
-.section:not([data-ground]) .stat .n { color: var(--flare-ink); }
+.section:not([data-ground]) .stat .n { color: var(--brass-ink); }
 .stat .l {
   font-size: var(--step--2);
   font-weight: 600;
@@ -1058,10 +1054,10 @@ h4, h5, h6 {
   font-family: var(--font-display);
   font-size: var(--step-1);
   font-weight: 600;
-  color: var(--flare-ink);
+  color: var(--brass-ink);
   line-height: 1;
 }
-[data-ground='dark'] .step::before { color: var(--flare); }
+[data-ground='dark'] .step::before { color: var(--brass); }
 .step h3 { font-size: var(--step-1); }
 .step p { font-size: var(--step--1); color: var(--text-on-light-muted); }
 [data-ground='dark'] .step p { color: var(--text-on-dark-muted); }
@@ -1091,8 +1087,8 @@ h4, h5, h6 {
   inset-inline-start: var(--sp-6);
   transform: translateY(-50%);
   padding: 0.35rem 0.85rem;
-  background: var(--flare);
-  color: var(--ink);
+  background: var(--ink);
+  color: var(--cream);
   border-radius: 999px;
   font-size: 0.6rem;
   font-weight: 700;
@@ -1130,10 +1126,10 @@ h4, h5, h6 {
   block-size: 1.1rem;
   margin-block-start: 0.22rem;
   border-radius: 50%;
-  background: var(--flare-soft);
-  border: var(--hairline) solid var(--flare);
-  background-image: linear-gradient(45deg, transparent 46%, var(--flare-ink) 46% 54%, transparent 54%),
-                    linear-gradient(-45deg, transparent 46%, var(--flare-ink) 46% 54%, transparent 54%);
+  background: var(--brass-soft);
+  border: var(--hairline) solid var(--cream-3);
+  background-image: linear-gradient(45deg, transparent 46%, var(--brass-ink) 46% 54%, transparent 54%),
+                    linear-gradient(-45deg, transparent 46%, var(--brass-ink) 46% 54%, transparent 54%);
   background-size: 60% 60%;
   background-position: center;
   background-repeat: no-repeat;
@@ -1207,10 +1203,10 @@ h4, h5, h6 {
   background:
     linear-gradient(currentColor, currentColor) center / 100% 1.5px no-repeat,
     linear-gradient(currentColor, currentColor) center / 1.5px 100% no-repeat;
-  color: var(--flare-ink);
+  color: var(--brass-ink);
   transition: transform var(--dur-fast) var(--ease);
 }
-[data-ground='dark'] .faq-item summary::after { color: var(--flare); }
+[data-ground='dark'] .faq-item summary::after { color: var(--brass); }
 .faq-item[open] summary::after { transform: rotate(135deg); }
 .faq-item .faq-answer {
   padding-block-end: var(--sp-5);
@@ -1258,8 +1254,8 @@ h4, h5, h6 {
 .input:hover, .textarea:hover, .select:hover { border-color: #c2b69f; }
 .input:focus, .textarea:focus, .select:focus {
   outline: none;
-  border-color: var(--flare);
-  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.22);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(125, 97, 25, 0.28);
 }
 .textarea { min-block-size: 8rem; resize: vertical; }
 .select {
@@ -1440,7 +1436,7 @@ h4, h5, h6 {
   text-decoration: line-through;
   text-decoration-thickness: 1px;
 }
-.cal-day.is-open:hover { background: var(--flare-soft); border-color: var(--flare); }
+.cal-day.is-open:hover { background: var(--brass-soft); border-color: var(--brass-ink); }
 .cal-day.is-open::after {
   content: '';
   position: absolute;
@@ -1448,7 +1444,7 @@ h4, h5, h6 {
   inline-size: 0.3rem;
   block-size: 0.3rem;
   border-radius: 50%;
-  background: var(--flare);
+  background: var(--brass-ink);
 }
 .cal-day[aria-pressed='true'] {
   background: var(--ink);
@@ -1476,7 +1472,7 @@ h4, h5, h6 {
   flex: none;
   border: var(--hairline) solid var(--cream-3);
 }
-.cal-legend .legend-open { background: var(--flare); border-color: var(--flare); }
+.cal-legend .legend-open { background: var(--brass-ink); border-color: var(--brass-ink); }
 .cal-legend .legend-none { background: transparent; }
 .cal-legend .legend-sel  { background: var(--ink); border-color: var(--ink); }
 
@@ -1495,7 +1491,7 @@ h4, h5, h6 {
   text-align: center;
   transition: all var(--dur-fast) var(--ease);
 }
-.slot:hover { border-color: var(--flare); background: var(--flare-soft); }
+.slot:hover { border-color: var(--brass-ink); background: var(--brass-soft); }
 .slot[aria-pressed='true'] {
   background: var(--ink);
   border-color: var(--ink);
@@ -1917,13 +1913,16 @@ h4, h5, h6 {
 /* --------------------------------------------------------------------------
    Portrait hero. The photographer fills the frame and the copy sits over him.
 
-   Contrast was measured on the actual crop rather than guessed: the darkest
-   band is 10.5:1 for white text and the brightest (lit pavement) only 3.9:1,
-   which fails. A flat 0.42 ink scrim lifts the worst band to 6.1:1 and leaves
-   every other band well clear, without draining the photograph.
+   No panel behind the copy and no gradient anywhere. Instead the type is put
+   where the photograph is already black: measured column by column, the left
+   40% of this frame is the wall he is standing against and averages L=0.008,
+   which carries cream text at better than 10:1 unaided. A flat ink tint does
+   the rest, and it is weaker on wide viewports than narrow ones because the
+   crop is not the same picture at both.
    -------------------------------------------------------------------------- */
 
 .hero-portrait {
+  --hero-tint: 0.55;
   position: relative;
   display: grid;
   align-items: center;
@@ -1945,36 +1944,60 @@ h4, h5, h6 {
   object-position: 34% 8%;
 }
 
-/* Flat, not a gradient — the scrim is here for legibility, not decoration. */
+/* Flat, not a gradient — this is a grade, not decoration. */
 .hero-portrait::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(19, 18, 16, 0.5);
+  background: rgba(19, 18, 16, var(--hero-tint));
   pointer-events: none;
 }
 
-.hero-portrait > .container { position: relative; z-index: 1; }
-
-/* A scrim alone cannot carry this. Measured against the rendered pixels, the
-   lit pavement behind the copy left the lede at 1.2:1 — invisible. Darkening
-   the whole image enough to fix that would have drained the photograph, so
-   the copy carries its own panel and the rest of him stays bright. */
-.hero-portrait .hero-copy {
-  background: rgba(19, 18, 16, 0.55);
-  padding: clamp(1.5rem, 1rem + 2.4vw, 2.75rem) clamp(1.25rem, 0.8rem + 2vw, 2.5rem);
-  border-radius: var(--radius-lg);
-  max-inline-size: 44rem;
+/* The site container is centred at a 1320px cap. That is wrong here: the
+   photograph is full-bleed, so on a wide screen a centred container walks the
+   copy rightwards into him while he stays put. Anchored to the viewport edge
+   instead, the copy sits on the wall at any width. */
+.hero-portrait > .container {
+  position: relative;
+  z-index: 1;
+  max-inline-size: none;
 }
 
-/* Muted grey loses to a bright background even through the panel. */
+/* Capped to roughly the width of the dark wall so the copy never wanders onto
+   the lit street. The vw term keeps that true on a tablet, where the same 40%
+   of the frame is a much smaller number of pixels. */
+.hero-portrait .hero-copy {
+  max-inline-size: min(30rem, 42vw);
+  /* The base .hero-copy is a centred column. Here it has to hug the left edge,
+     because that is where the photograph is black. */
+  margin-inline: 0;
+  justify-items: start;
+  text-align: start;
+}
+.hero-portrait .hero-copy h1 { max-inline-size: none; }
+.hero-portrait .hero-copy .lede { text-align: start; }
+
+@media (min-width: 48rem) {
+  /* Bodoni caps do not hyphenate. At the scale's own size "PHOTOGRAPHY" is
+     353px wide inside a 322px column on a 768px screen and simply pushes out
+     of it — which is how the headline ended up over the lit street rather
+     than the wall. Tying the size to the same vw the column uses keeps the
+     longest word inside it at every width. */
+  .hero-portrait .hero-copy .display-xl { font-size: min(var(--step-5), 5.2vw); }
+}
+
+/* Muted grey is not enough over a photograph, even a dark one. */
 .hero-portrait .hero-copy .lede { color: var(--text-on-dark); }
 
 @media (max-width: 47.99rem) {
   .hero-portrait {
+    /* A phone shows almost the full width of the frame and the copy has to
+       span it, so it crosses the lit half. That costs a heavier tint. */
+    --hero-tint: 0.62;
     min-block-size: min(78vh, 34rem);
     padding-block: var(--sp-7);
   }
   /* A phone crops barely any height, so the offset hardly matters here. */
   .hero-portrait .hero-bg { object-position: 42% 10%; }
+  .hero-portrait .hero-copy { max-inline-size: none; }
 }

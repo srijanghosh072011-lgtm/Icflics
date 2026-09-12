@@ -126,11 +126,14 @@ Everything is driven by custom properties at the top of `public/assets/css/site.
 - **Type:** Bodoni Moda for display (set in caps, which reads architectural
   rather than fashion), Inter for everything else. Both self-hosted, so no
   third-party font CDN appears in the CSP.
-- **Palette:** warm near-black `--ink`, warm paper `--cream`, signal orange
-  `--flare`, deep pitch green `--pitch`, brass `--brass`.
-- **Contrast:** every text pairing meets WCAG AA. The constraints are written
-  into the token comments — notably, orange buttons carry **ink** text, not
-  white, because white on `--flare` is only 3.1:1.
+- **Palette:** warm near-black `--ink`, warm paper `--cream`, and a single
+  accent, brass `--brass`. Near-monochrome by design: the photographs are
+  meant to be the only real colour on the page. `--pitch` (deep field green)
+  is kept for the rare full-bleed green ground.
+- **Contrast:** every text pairing meets WCAG AA, measured rather than
+  estimated. The constraints are written into the token comments — notably
+  `--brass` is only 2.1:1 on cream, so brass **text** on a light ground uses
+  `--brass-ink`, and the focus ring switches tone with the ground.
 - **Grounds:** put `data-ground="dark"`, `"pitch"` or `"cream-2"` on a section
   and every component inside adapts. Forgetting it is why a ghost button can
   end up invisible.
